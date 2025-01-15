@@ -1,0 +1,63 @@
+# Xcode
+.DS_Store
+*.xcuserstate
+*.xcscmblueprint
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcuserdatad/
+*.xcassets/
+
+# Swift Package Manager
+.build/
+
+# Derived data
+DerivedData/
+
+# Archives
+*.xcarchive
+
+# iOS specific
+*.ipa
+*.app
+*.dSYM
+*.mobileprovision
+
+# Carthage
+Carthage/Build/
+
+# Cocoapods
+Pods/
+Podfile.lock
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Logs
+*.log
+
+# Temporary files
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# Other
+*.mode1v3
+*.mode2v3
+*.perspectivev3
