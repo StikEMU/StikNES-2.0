@@ -1,0 +1,610 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = DCBB136B2D225BDA00A1721A /* Swifter */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DCBB134E2D225B2600A1721A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCBB13352D225B2400A1721A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DCBB133C2D225B2400A1721A;
+			remoteInfo = StikNES;
+		};
+		DCBB13582D225B2600A1721A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCBB13352D225B2400A1721A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DCBB133C2D225B2400A1721A;
+			remoteInfo = StikNES;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		DCBB133D2D225B2400A1721A /* StikNES.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StikNES.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCBB134D2D225B2600A1721A /* StikNESTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikNESTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCBB13572D225B2600A1721A /* StikNESUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikNESUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DC8B4D0A2D25853400F7914C /* Exceptions for "StikNES" folder in "StikNES" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DCBB133C2D225B2400A1721A /* StikNES */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		DCBB133F2D225B2400A1721A /* StikNES */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DC8B4D0A2D25853400F7914C /* Exceptions for "StikNES" folder in "StikNES" target */,
+			);
+			path = StikNES;
+			sourceTree = "<group>";
+		};
+		DCBB13502D225B2600A1721A /* StikNESTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = StikNESTests;
+			sourceTree = "<group>";
+		};
+		DCBB135A2D225B2600A1721A /* StikNESUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = StikNESUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DCBB133A2D225B2400A1721A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DCBB134A2D225B2600A1721A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DCBB13542D225B2600A1721A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DCBB13342D225B2400A1721A = {
+			isa = PBXGroup;
+			children = (
+				DCBB133F2D225B2400A1721A /* StikNES */,
+				DCBB13502D225B2600A1721A /* StikNESTests */,
+				DCBB135A2D225B2600A1721A /* StikNESUITests */,
+				DCBB133E2D225B2400A1721A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DCBB133E2D225B2400A1721A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DCBB133D2D225B2400A1721A /* StikNES.app */,
+				DCBB134D2D225B2600A1721A /* StikNESTests.xctest */,
+				DCBB13572D225B2600A1721A /* StikNESUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DCBB133C2D225B2400A1721A /* StikNES */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DCBB13612D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNES" */;
+			buildPhases = (
+				DCBB13392D225B2400A1721A /* Sources */,
+				DCBB133A2D225B2400A1721A /* Frameworks */,
+				DCBB133B2D225B2400A1721A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DCBB133F2D225B2400A1721A /* StikNES */,
+			);
+			name = StikNES;
+			packageProductDependencies = (
+				DCBB136B2D225BDA00A1721A /* Swifter */,
+			);
+			productName = StikNES;
+			productReference = DCBB133D2D225B2400A1721A /* StikNES.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DCBB134C2D225B2600A1721A /* StikNESTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DCBB13642D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESTests" */;
+			buildPhases = (
+				DCBB13492D225B2600A1721A /* Sources */,
+				DCBB134A2D225B2600A1721A /* Frameworks */,
+				DCBB134B2D225B2600A1721A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DCBB134F2D225B2600A1721A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DCBB13502D225B2600A1721A /* StikNESTests */,
+			);
+			name = StikNESTests;
+			packageProductDependencies = (
+			);
+			productName = StikNESTests;
+			productReference = DCBB134D2D225B2600A1721A /* StikNESTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		DCBB13562D225B2600A1721A /* StikNESUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DCBB13672D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESUITests" */;
+			buildPhases = (
+				DCBB13532D225B2600A1721A /* Sources */,
+				DCBB13542D225B2600A1721A /* Frameworks */,
+				DCBB13552D225B2600A1721A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DCBB13592D225B2600A1721A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DCBB135A2D225B2600A1721A /* StikNESUITests */,
+			);
+			name = StikNESUITests;
+			packageProductDependencies = (
+			);
+			productName = StikNESUITests;
+			productReference = DCBB13572D225B2600A1721A /* StikNESUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DCBB13352D225B2400A1721A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					DCBB133C2D225B2400A1721A = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					DCBB134C2D225B2600A1721A = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = DCBB133C2D225B2400A1721A;
+					};
+					DCBB13562D225B2600A1721A = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = DCBB133C2D225B2400A1721A;
+					};
+				};
+			};
+			buildConfigurationList = DCBB13382D225B2400A1721A /* Build configuration list for PBXProject "StikNES" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = DCBB13342D225B2400A1721A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = DCBB133E2D225B2400A1721A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DCBB133C2D225B2400A1721A /* StikNES */,
+				DCBB134C2D225B2600A1721A /* StikNESTests */,
+				DCBB13562D225B2600A1721A /* StikNESUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DCBB133B2D225B2400A1721A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DCBB134B2D225B2600A1721A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DCBB13552D225B2600A1721A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DCBB13392D225B2400A1721A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DCBB13492D225B2600A1721A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DCBB13532D225B2600A1721A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DCBB134F2D225B2600A1721A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DCBB133C2D225B2400A1721A /* StikNES */;
+			targetProxy = DCBB134E2D225B2600A1721A /* PBXContainerItemProxy */;
+		};
+		DCBB13592D225B2600A1721A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DCBB133C2D225B2400A1721A /* StikNES */;
+			targetProxy = DCBB13582D225B2600A1721A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		DCBB135F2D225B2600A1721A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		DCBB13602D225B2600A1721A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DCBB13622D225B2600A1721A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"StikNES/Preview Content\"";
+				DEVELOPMENT_TEAM = SZ977XLF24;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StikNES/Info.plist;
+				INFOPLIST_KEY_GCSupportsGameMode = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 5.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DCBB13632D225B2600A1721A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"StikNES/Preview Content\"";
+				DEVELOPMENT_TEAM = SZ977XLF24;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StikNES/Info.plist;
+				INFOPLIST_KEY_GCSupportsGameMode = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 5.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		DCBB13652D225B2600A1721A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ977XLF24;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNESTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StikNES.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StikNES";
+			};
+			name = Debug;
+		};
+		DCBB13662D225B2600A1721A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ977XLF24;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNESTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StikNES.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StikNES";
+			};
+			name = Release;
+		};
+		DCBB13682D225B2600A1721A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ977XLF24;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNESUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = StikNES;
+			};
+			name = Debug;
+		};
+		DCBB13692D225B2600A1721A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ977XLF24;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNESUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = StikNES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DCBB13382D225B2400A1721A /* Build configuration list for PBXProject "StikNES" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DCBB135F2D225B2600A1721A /* Debug */,
+				DCBB13602D225B2600A1721A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DCBB13612D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNES" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DCBB13622D225B2600A1721A /* Debug */,
+				DCBB13632D225B2600A1721A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DCBB13642D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DCBB13652D225B2600A1721A /* Debug */,
+				DCBB13662D225B2600A1721A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DCBB13672D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DCBB13682D225B2600A1721A /* Debug */,
+				DCBB13692D225B2600A1721A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/httpswift/swifter";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DCBB136B2D225BDA00A1721A /* Swifter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */;
+			productName = Swifter;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DCBB13352D225B2400A1721A /* Project object */;
+}
