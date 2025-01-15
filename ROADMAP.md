@@ -4,7 +4,7 @@ This document outlines the planned features and updates for StikNES, providing a
 
 ## 🎯 **Version 2.0.0 Goals**
 - [X] Fix B button functionality to improve gameplay accuracy.
-- [ ] Add controller support for a more authentic gaming experience.
+- [X] Add controller support for a more authentic gaming experience.
 - [ ] Perform extensive testing to ensure stability and reliability.
 
 ## 🚀 **Post 2.0.0 Plans**
