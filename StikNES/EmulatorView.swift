@@ -26,15 +26,17 @@ struct EmulatorView: View {
             VStack {
                 NESWebView(game: game, webViewModel: webViewModel)
                     .onAppear {
+                        setupPhysicalController()
                         if isVirtualControllerVisible {
                             setupVirtualController()
                         }
                     }
                     .onDisappear {
                         disconnectVirtualController()
+                        stopListeningForPhysicalControllers()
                     }
             }
-            .background(Color.black) // Set background color to black
+            .background(Color.black)
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -64,8 +66,7 @@ struct EmulatorView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
-                            .fontWeight(.bold)
-                            .frame(width: 50, height: 50)
+                            .font(.system(size: 24, weight: .bold)) // Increased size
                     }
                 }
             }
@@ -114,10 +115,45 @@ struct EmulatorView: View {
         }
     }
 
+    private func setupPhysicalController() {
+        NotificationCenter.default.addObserver(
+            forName: .GCControllerDidConnect,
+            object: nil,
+            queue: .main
+        ) { _ in
+            self.configurePhysicalControllers()
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: .GCControllerDidDisconnect,
+            object: nil,
+            queue: .main
+        ) { _ in
+            // Handle controller disconnection if necessary
+        }
+
+        configurePhysicalControllers() // For already connected controllers
+    }
+
+    private func configurePhysicalControllers() {
+        for controller in GCController.controllers() {
+            guard let gamepad = controller.extendedGamepad else { continue }
+            gamepad.valueChangedHandler = { [self] gamepad, _ in
+                guard let webView = webViewModel.webView else { return }
+                handleGamepadInput(gamepad, webView: webView)
+            }
+        }
+    }
+
     private func disconnectVirtualController() {
         virtualController?.disconnect()
         virtualController = nil
         autoSprintCancellable?.cancel()
+    }
+
+    private func stopListeningForPhysicalControllers() {
+        NotificationCenter.default.removeObserver(self, name: .GCControllerDidConnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .GCControllerDidDisconnect, object: nil)
     }
 
     private func quitGame() {
@@ -126,9 +162,13 @@ struct EmulatorView: View {
 
     private func handleGamepadInput(_ gamepad: GCExtendedGamepad, webView: WKWebView) {
         handleDirectionPad(gamepad.dpad, webView: webView)
-        mapButton(gamepad.buttonA, keyCode: 65, webView: webView)
-        mapButton(gamepad.rightShoulder, keyCode: 32, webView: webView)
-        mapButton(gamepad.leftShoulder, keyCode: 83, webView: webView)
+        mapButton(gamepad.buttonA, keyCode: 65, webView: webView) // A button
+        mapButton(gamepad.rightShoulder, keyCode: 32, webView: webView) // Right Shoulder (e.g., Space)
+        mapButton(gamepad.leftShoulder, keyCode: 83, webView: webView) // Left Shoulder (e.g., S)
+
+        // Map the B button based on auto-sprint state
+        let bKeyCode = isAutoSprintEnabled ? 0 : 66
+        mapButton(gamepad.buttonB, keyCode: bKeyCode, webView: webView)
     }
 
     private func handleDirectionPad(_ dpad: GCControllerDirectionPad, webView: WKWebView) {
@@ -148,10 +188,12 @@ struct EmulatorView: View {
     }
 
     private func mapButton(_ button: GCControllerButtonInput, keyCode: Int, webView: WKWebView) {
-        if button.isPressed {
-            sendKeyPress(keyCode: keyCode, webView: webView)
-        } else {
-            sendKeyUp(keyCode: keyCode, webView: webView)
+        if keyCode > 0 { // Ignore invalid key codes
+            if button.isPressed {
+                sendKeyPress(keyCode: keyCode, webView: webView)
+            } else {
+                sendKeyUp(keyCode: keyCode, webView: webView)
+            }
         }
     }
 
@@ -203,60 +245,75 @@ struct EmulatorView: View {
 struct CreditsView: View {
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Acknowledgements").font(.headline)) {
-                    Text("This application was made possible with the support of open-source projects and contributions.")
-                        .font(.subheadline)
+            VStack {
+                // Swipe down to dismiss message with arrows
+                HStack {
+                    Image(systemName: "arrow.down")
                         .foregroundColor(.secondary)
-                        .padding(.vertical, 4)
+                    Text("Swipe down to dismiss")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Image(systemName: "arrow.down")
+                        .foregroundColor(.secondary)
                 }
-                Section(header: Text("Open Source Projects").font(.headline)) {
-                    Link(destination: URL(string: "https://github.com/httpswift/swifter")!) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Swifter")
-                                    .font(.body)
-                                Text("BSD-3-Clause License")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "arrow.up.right.square")
-                                .foregroundColor(.blue)
-                        }
-                        .padding(.vertical, 4)
+                .padding(.top, 8)
+
+                // Main content
+                Form {
+                    Section(header: Text("Acknowledgements").font(.headline)) {
+                        Text("This application was made possible with the support of open-source projects and contributions.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 4)
                     }
-                    Link(destination: URL(string: "https://github.com/takahirox/nes-rust")!) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("NES Rust")
-                                    .font(.body)
-                                Text("MIT License")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                    Section(header: Text("Open Source Projects").font(.headline)) {
+                        Link(destination: URL(string: "https://github.com/httpswift/swifter")!) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Swifter")
+                                        .font(.body)
+                                    Text("BSD-3-Clause License")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right.square")
+                                    .foregroundColor(.blue)
                             }
-                            Spacer()
-                            Image(systemName: "arrow.up.right.square")
-                                .foregroundColor(.blue)
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
+                        Link(destination: URL(string: "https://github.com/takahirox/nes-rust")!) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("NES Rust")
+                                        .font(.body)
+                                    Text("MIT License")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right.square")
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(.vertical, 4)
+                        }
                     }
-                }
-                Section(header: Text("Community").font(.headline)) {
-                    Link(destination: URL(string: "https://discord.gg/a6qxs97Gun")!) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Join our Discord")
-                                    .font(.body)
-                                Text("Stay connected and join the discussion!")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                    Section(header: Text("Community").font(.headline)) {
+                        Link(destination: URL(string: "https://discord.gg/a6qxs97Gun")!) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Join our Discord")
+                                        .font(.body)
+                                    Text("Stay connected and join the discussion!")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right.square")
+                                    .foregroundColor(.blue)
                             }
-                            Spacer()
-                            Image(systemName: "arrow.up.right.square")
-                                .foregroundColor(.blue)
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
                     }
                 }
             }
@@ -274,10 +331,6 @@ struct NESWebView: UIViewRepresentable {
         let webView = WKWebView()
         webViewModel.webView = webView
         webViewModel.isWebViewReady = true
-
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            appDelegate.restartServer()
-        }
 
         if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
             webView.load(URLRequest(url: url))
