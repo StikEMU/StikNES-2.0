@@ -19,7 +19,6 @@ struct EmulatorView: View {
     @AppStorage("isVirtualControllerVisible") private var isVirtualControllerVisible = true
     @State private var autoSprintCancellable: AnyCancellable?
     @State private var isCreditsPresented = false
-    @State private var isSkinManagerPresented = false // New state for Skin Manager
     @State private var showQuitConfirmation = false
 
     var body: some View {
@@ -55,11 +54,6 @@ struct EmulatorView: View {
                                 }
                             }
                         Button(action: {
-                            isSkinManagerPresented.toggle() // Show Skin Manager
-                        }) {
-                            Label("Skin Manager", systemImage: "paintbrush")
-                        }
-                        Button(action: {
                             isCreditsPresented.toggle()
                         }) {
                             Label("Credits", systemImage: "info.circle")
@@ -78,9 +72,6 @@ struct EmulatorView: View {
             }
             .sheet(isPresented: $isCreditsPresented) {
                 CreditsView()
-            }
-            .sheet(isPresented: $isSkinManagerPresented) { // Skin Manager Sheet
-                SkinManagerView()
             }
             .confirmationDialog(
                 "Are you sure you want to quit?",
@@ -355,4 +346,3 @@ class WebViewModel: ObservableObject {
     @Published var webView: WKWebView?
     @Published var isWebViewReady = false
 }
-
