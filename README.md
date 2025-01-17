@@ -12,10 +12,11 @@ StikNES is a SwiftUI-based NES emulator designed for iOS devices. It leverages t
 
 1. Clone this repository to your local machine.
    ```bash
-   git clone https://github.com/0-Blu/StikNES.git
+   git clone https://github.com/StikEMU/StikNES-2.0.git
    ```
-2. Open the project in Xcode.
-3. Build and run on your desired iOS device.
+2. Follow any prompts it gives you.
+3. Open the project in Xcode.
+4. Build and run on your desired iOS device.
 
 ## 📖 **Roadmap**
 For future plans and ongoing developments, see the [Roadmap](ROADMAP.md).

@@ -5,6 +5,7 @@ This document outlines the planned features and updates for StikNES, providing a
 ## 🎯 **Version 2.0.0 Goals**
 - [X] Fix B button functionality to improve gameplay accuracy.
 - [X] Add controller support for a more authentic gaming experience.
+- [ ] Fix the server bug by making it restart everytime a rom is loaded.
 - [ ] Perform extensive testing to ensure stability and reliability.
 
 ## 🚀 **Post 2.0.0 Plans**
