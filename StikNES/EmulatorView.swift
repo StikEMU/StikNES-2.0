@@ -156,13 +156,19 @@ struct EmulatorView: View {
                 switch result {
                 case .success(let urls):
                     guard let url = urls.first else { return }
-                    do {
-                        let data = try Data(contentsOf: url)
-                        saveCustomSVG(data: data)
-                        importedSVGData = data
-                        print("DEBUG: Imported SVG from \(url).")
-                    } catch {
-                        print("ERROR: Could not read SVG data -> \(error.localizedDescription)")
+                    // Access security scoped resource
+                    if url.startAccessingSecurityScopedResource() {
+                        defer { url.stopAccessingSecurityScopedResource() } // Ensure resource access is stopped
+                        do {
+                            let data = try Data(contentsOf: url)
+                            saveCustomSVG(data: data)
+                            importedSVGData = data
+                            print("DEBUG: Imported SVG from \(url).")
+                        } catch {
+                            print("ERROR: Could not read SVG data -> \(error.localizedDescription)")
+                        }
+                    } else {
+                        print("ERROR: Could not access security scoped resource.")
                     }
                 case .failure(let error):
                     print("ERROR: File import failed -> \(error.localizedDescription)")
