@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DC47DC6E2D3B040D008A9F93 /* SVGView in Frameworks */ = {isa = PBXBuildFile; productRef = DC47DC6D2D3B040D008A9F93 /* SVGView */; };
 		DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = DCBB136B2D225BDA00A1721A /* Swifter */; };
 /* End PBXBuildFile section */
 
@@ -69,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC47DC6E2D3B040D008A9F93 /* SVGView in Frameworks */,
 				DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -131,6 +133,7 @@
 			name = StikNES;
 			packageProductDependencies = (
 				DCBB136B2D225BDA00A1721A /* Swifter */,
+				DC47DC6D2D3B040D008A9F93 /* SVGView */,
 			);
 			productName = StikNES;
 			productReference = DCBB133D2D225B2400A1721A /* StikNES.app */;
@@ -216,6 +219,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */,
+				DC47DC6C2D3B040D008A9F93 /* XCRemoteSwiftPackageReference "SVGView" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DCBB133E2D225B2400A1721A /* Products */;
@@ -588,6 +592,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		DC47DC6C2D3B040D008A9F93 /* XCRemoteSwiftPackageReference "SVGView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/exyte/SVGView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.6;
+			};
+		};
 		DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/httpswift/swifter";
@@ -599,6 +611,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		DC47DC6D2D3B040D008A9F93 /* SVGView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DC47DC6C2D3B040D008A9F93 /* XCRemoteSwiftPackageReference "SVGView" */;
+			productName = SVGView;
+		};
 		DCBB136B2D225BDA00A1721A /* Swifter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */;
