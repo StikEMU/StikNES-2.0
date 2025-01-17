@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DC9009D02D3AC73C00BCCC07 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = DC9009CF2D3AC73C00BCCC07 /* ZIPFoundation */; };
 		DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = DCBB136B2D225BDA00A1721A /* Swifter */; };
 /* End PBXBuildFile section */
 
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */,
+				DC9009D02D3AC73C00BCCC07 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			name = StikNES;
 			packageProductDependencies = (
 				DCBB136B2D225BDA00A1721A /* Swifter */,
+				DC9009CF2D3AC73C00BCCC07 /* ZIPFoundation */,
 			);
 			productName = StikNES;
 			productReference = DCBB133D2D225B2400A1721A /* StikNES.app */;
@@ -216,6 +219,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */,
+				DC9009CE2D3AC73C00BCCC07 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DCBB133E2D225B2400A1721A /* Products */;
@@ -588,6 +592,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		DC9009CE2D3AC73C00BCCC07 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
 		DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/httpswift/swifter";
@@ -599,6 +611,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		DC9009CF2D3AC73C00BCCC07 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DC9009CE2D3AC73C00BCCC07 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
 		DCBB136B2D225BDA00A1721A /* Swifter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */;
