@@ -45,6 +45,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		DC47DD0A2D3B289B008A9F93 /* StikNESTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = StikNESTests;
+			sourceTree = "<group>";
+		};
 		DCBB133F2D225B2400A1721A /* StikNES */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -93,6 +98,7 @@
 				DCBB133F2D225B2400A1721A /* StikNES */,
 				DCBB135A2D225B2600A1721A /* StikNESUITests */,
 				DCBB133E2D225B2400A1721A /* Products */,
+				DC47DD0A2D3B289B008A9F93 /* StikNESTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -122,6 +128,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				DC47DD0A2D3B289B008A9F93 /* StikNESTests */,
 				DCBB133F2D225B2400A1721A /* StikNES */,
 			);
 			name = StikNES;
@@ -412,7 +419,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"StikNES/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = SZ977XLF24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -444,7 +451,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"StikNES/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = SZ977XLF24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
