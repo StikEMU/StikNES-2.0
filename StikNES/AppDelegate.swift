@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import Swifter
+@preconcurrency import Swifter
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?

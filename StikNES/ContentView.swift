@@ -126,7 +126,7 @@ struct ContentView: View {
 
     // MARK: - File Importing
 
-    private func handleFileImport(result: Result<[URL], Error>) {
+    private func handleFileImport(result: Result<[URL], any Error>) {
         do {
             let selectedFiles = try result.get()
             guard let selectedFile = selectedFiles.first else { return }
