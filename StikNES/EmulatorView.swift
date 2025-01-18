@@ -11,6 +11,7 @@ import WebKit
 import GameController
 import SVGView
 import UniformTypeIdentifiers
+import UIKit
 
 // MARK: - EmulatorView
 struct EmulatorView: View {
@@ -338,6 +339,7 @@ extension EmulatorView {
             print("ERROR: WebView is nil. Cannot send key press for \(keyCode)")
             return
         }
+        provideHapticFeedback() // Haptic feedback on key press
         let (codeValue, keyValue) = eventProperties(for: keyCode)
         
         let jsCode = """
@@ -361,6 +363,7 @@ extension EmulatorView {
             print("ERROR: WebView is nil. Cannot send key up for \(keyCode)")
             return
         }
+        provideHapticFeedback() // Haptic feedback on key release
         let (codeValue, keyValue) = eventProperties(for: keyCode)
         
         let jsCode = """
@@ -377,6 +380,11 @@ extension EmulatorView {
         })();
         """
         webView.evaluateJavaScript(jsCode, completionHandler: nil)
+    }
+    
+    private func provideHapticFeedback() {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+        feedbackGenerator.impactOccurred()
     }
 }
 
