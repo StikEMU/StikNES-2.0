@@ -34,28 +34,10 @@
 		DCBB13572D225B2600A1721A /* StikNESUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikNESUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DC8B4D0A2D25853400F7914C /* Exceptions for "StikNES" folder in "StikNES" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = DCBB133C2D225B2400A1721A /* StikNES */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DCBB133F2D225B2400A1721A /* StikNES */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DC8B4D0A2D25853400F7914C /* Exceptions for "StikNES" folder in "StikNES" target */,
-			);
 			path = StikNES;
-			sourceTree = "<group>";
-		};
-		DCBB13502D225B2600A1721A /* StikNESTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = StikNESTests;
 			sourceTree = "<group>";
 		};
 		DCBB135A2D225B2600A1721A /* StikNESUITests */ = {
@@ -96,7 +78,6 @@
 			isa = PBXGroup;
 			children = (
 				DCBB133F2D225B2400A1721A /* StikNES */,
-				DCBB13502D225B2600A1721A /* StikNESTests */,
 				DCBB135A2D225B2600A1721A /* StikNESUITests */,
 				DCBB133E2D225B2400A1721A /* Products */,
 			);
@@ -151,9 +132,6 @@
 			);
 			dependencies = (
 				DCBB134F2D225B2600A1721A /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				DCBB13502D225B2600A1721A /* StikNESTests */,
 			);
 			name = StikNESTests;
 			packageProductDependencies = (
