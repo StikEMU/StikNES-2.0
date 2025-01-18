@@ -34,9 +34,22 @@
 		DCBB13572D225B2600A1721A /* StikNESUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikNESUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikNES" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DCBB133C2D225B2400A1721A /* StikNES */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DCBB133F2D225B2400A1721A /* StikNES */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikNES" target */,
+			);
 			path = StikNES;
 			sourceTree = "<group>";
 		};
