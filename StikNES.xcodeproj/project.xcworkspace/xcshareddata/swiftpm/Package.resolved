@@ -1,0 +1,24 @@
+{
+  "originHash" : "70e8b8d75b667d384fd20f2f73005119635c06dc137ae435773476cebe524577",
+  "pins" : [
+    {
+      "identity" : "svgview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/exyte/SVGView",
+      "state" : {
+        "revision" : "6465962facdd25cb96eaebc35603afa2f15d2c0d",
+        "version" : "1.0.6"
+      }
+    },
+    {
+      "identity" : "swifter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/httpswift/swifter",
+      "state" : {
+        "revision" : "9483a5d459b45c3ffd059f7b55f9638e268632fd",
+        "version" : "1.5.0"
+      }
+    }
+  ],
+  "version" : 3
+}
