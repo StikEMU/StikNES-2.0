@@ -10,6 +10,7 @@ import Combine
 import WebKit
 import GameController
 import UniformTypeIdentifiers
+import PhotosUI
 import UIKit
 
 // MARK: - EmulatorView
@@ -21,7 +22,10 @@ struct EmulatorView: View {
     
     @AppStorage("isAutoSprintEnabled") private var isAutoSprintEnabled = false
     
-    // This flag ensures we only do setup once
+    // NEW: Toggle for haptic feedback
+    @AppStorage("isHapticFeedbackEnabled") private var isHapticFeedbackEnabled = true
+    
+    // Track if we already ran our one-time setup
     @State private var didInitialize = false
     
     @State private var autoSprintCancellable: AnyCancellable?
@@ -29,9 +33,16 @@ struct EmulatorView: View {
     @State private var showQuitConfirmation = false
     @State private var isEditingLayout = false
     
-    // Two separate arrays: one for portrait, one for landscape
+    // Instead of file importer booleans, we now use these:
+    @State private var showingPhotoPickerLandscape = false
+    @State private var showingPhotoPickerPortrait = false
+    
+    // The PhotosPicker items we'll track for each orientation:
+    @State private var selectedPhotoLandscape: PhotosPickerItem?
+    @State private var selectedPhotoPortrait: PhotosPickerItem?
+    
+    // Two arrays: one for portrait, one for landscape
     @State private var customButtonsPortrait: [CustomButton] = [
-        // Example defaults for portrait
         CustomButton(label: "Up",     keyCode: 38, x:  80, y:  80, width: 60, height: 60),
         CustomButton(label: "Down",   keyCode: 40, x:  80, y: 200, width: 60, height: 60),
         CustomButton(label: "Left",   keyCode: 37, x:  20, y: 140, width: 60, height: 60),
@@ -44,7 +55,6 @@ struct EmulatorView: View {
     ]
     
     @State private var customButtonsLandscape: [CustomButton] = [
-        // Example defaults for landscape
         CustomButton(label: "Up",     keyCode: 38, x: 100, y:  40, width: 60, height: 60),
         CustomButton(label: "Down",   keyCode: 40, x: 100, y: 160, width: 60, height: 60),
         CustomButton(label: "Left",   keyCode: 37, x:  40, y: 100, width: 60, height: 60),
@@ -56,15 +66,12 @@ struct EmulatorView: View {
         CustomButton(label: "Reset",  keyCode: 82, x: 300, y: 120, width: 60, height: 60)
     ]
     
-    // For PNG import
-    @State private var showingFileImporterLandscape = false
-    @State private var showingFileImporterPortrait  = false
-    
+    // Where we store the actual PNG (or any image) bytes once imported
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait:  Data? = nil
     
     var body: some View {
-        // Create ONE NESWebView so it doesn't re-init on rotation
+        // Create ONE web view so it doesn't re-initialize on rotation
         let nesWebView = NESWebView(game: game, webViewModel: webViewModel)
         
         NavigationView {
@@ -74,19 +81,18 @@ struct EmulatorView: View {
                 GeometryReader { geometry in
                     let isPortrait = geometry.size.height > geometry.size.width
                     
-                    // Decide which buttons array to show
+                    // Decide which button array & PNG to show
                     let displayedButtons = isPortrait ? $customButtonsPortrait : $customButtonsLandscape
-                    // Decide which PNG data to show
                     let pngDataToUse = isPortrait ? importedPNGDataPortrait : importedPNGDataLandscape
                     
                     if isPortrait {
-                        // -- PORTRAIT LAYOUT --
                         VStack(spacing: 0) {
-                            // Reuse the SAME web view up top
+                            // Top half for NES
                             nesWebView
                                 .frame(width: geometry.size.width,
                                        height: geometry.size.height * 0.5)
                             
+                            // Bottom half for PNG + custom buttons
                             PNGOverlay(
                                 pressHandler: { keyCode in
                                     guard keyCode > 0 else { return }
@@ -104,9 +110,8 @@ struct EmulatorView: View {
                                    height: geometry.size.height * 0.5)
                         }
                     } else {
-                        // -- LANDSCAPE LAYOUT --
+                        // LANDSCAPE
                         ZStack {
-                            // Reuse the SAME web view full-screen
                             nesWebView
                                 .frame(width: geometry.size.width,
                                        height: geometry.size.height)
@@ -130,38 +135,45 @@ struct EmulatorView: View {
                 }
             }
             .navigationBarBackButtonHidden(true)
-            // Setup only once
+            
+            // Only run once
             .onAppear {
                 guard !didInitialize else { return }
                 didInitialize = true
                 
-                // Do initial setup
                 setupPhysicalController()
                 loadAllButtonLayouts()
                 
-                // Load any PNG data for both orientations
+                // If user had previously imported images
                 importedPNGDataLandscape = loadPNG(key: "importedPNGLandscape")
                 importedPNGDataPortrait  = loadPNG(key: "importedPNGPortrait")
             }
-            // When the user truly leaves, remove the controller observers
             .onDisappear {
+                // Stop listening if you really want to end the session
                 stopListeningForPhysicalControllers()
             }
+            
+            // MARK: - Toolbar
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Menu {
+                        // Auto sprint toggle
                         Toggle("Auto Sprint", isOn: $isAutoSprintEnabled)
                             .onChange(of: isAutoSprintEnabled) { enabled in
                                 handleAutoSprintToggle(enabled: enabled)
                             }
                         
+                        // NEW: Haptic feedback toggle
+                        Toggle("Haptic Feedback", isOn: $isHapticFeedbackEnabled)
+                        
+                        // Credits
                         Button {
                             isCreditsPresented.toggle()
                         } label: {
                             Label("Credits", systemImage: "info.circle")
                         }
                         
-                        // Toggle editing; if we finish editing, save
+                        // Layout editing
                         Button {
                             isEditingLayout.toggle()
                             if !isEditingLayout {
@@ -171,7 +183,7 @@ struct EmulatorView: View {
                             Label("Customize Layout", systemImage: "rectangle.angledperson.fill")
                         }
                         
-                        // Reset current orientation
+                        // Reset layout
                         Button("Reset Layout (Current)") {
                             resetToDefaultLayoutCurrent()
                             saveCurrentOrientationLayout()
@@ -179,16 +191,17 @@ struct EmulatorView: View {
                         
                         Divider()
                         
-                        // Import PNG for each orientation
-                        Button("Import PNG (Landscape)") {
-                            showingFileImporterLandscape = true
+                        // Photo picker buttons
+                        Button("Import Skin (Landscape)") {
+                            showingPhotoPickerLandscape = true
                         }
-                        Button("Import PNG (Portrait)") {
-                            showingFileImporterPortrait = true
+                        Button("Import Skin (Portrait)") {
+                            showingPhotoPickerPortrait = true
                         }
                         
                         Divider()
                         
+                        // Quit
                         Button(role: .destructive) {
                             showQuitConfirmation = true
                         } label: {
@@ -200,6 +213,8 @@ struct EmulatorView: View {
                     }
                 }
             }
+            
+            // MARK: - Confirm Quit & Sheets
             .sheet(isPresented: $isCreditsPresented) {
                 CreditsView()
             }
@@ -213,60 +228,61 @@ struct EmulatorView: View {
                 }
                 Button("Cancel", role: .cancel) { }
             }
-            // File importers
-            .fileImporter(
-                isPresented: $showingFileImporterLandscape,
-                allowedContentTypes: [.image],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    guard let url = urls.first else { return }
-                    if url.startAccessingSecurityScopedResource() {
-                        defer { url.stopAccessingSecurityScopedResource() }
-                        do {
-                            let data = try Data(contentsOf: url)
-                            savePNG(data: data, key: "importedPNGLandscape")
-                            importedPNGDataLandscape = data
-                            print("DEBUG: Imported PNG (landscape) from \(url).")
-                        } catch {
-                            print("ERROR: Could not read PNG data -> \(error.localizedDescription)")
-                        }
-                    } else {
-                        print("ERROR: Could not access security scoped resource.")
-                    }
-                case .failure(let error):
-                    print("ERROR: File import failed -> \(error.localizedDescription)")
+            
+            // MARK: - Landscape Photo Picker
+            .photosPicker(
+                isPresented: $showingPhotoPickerLandscape,
+                selection: $selectedPhotoLandscape,
+                matching: .images,
+                photoLibrary: .shared()
+            )
+            .onChange(of: selectedPhotoLandscape) { newItem in
+                Task {
+                    await loadImageData(from: newItem, isLandscape: true)
                 }
             }
-            .fileImporter(
-                isPresented: $showingFileImporterPortrait,
-                allowedContentTypes: [.image],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    guard let url = urls.first else { return }
-                    if url.startAccessingSecurityScopedResource() {
-                        defer { url.stopAccessingSecurityScopedResource() }
-                        do {
-                            let data = try Data(contentsOf: url)
-                            savePNG(data: data, key: "importedPNGPortrait")
-                            importedPNGDataPortrait = data
-                            print("DEBUG: Imported PNG (portrait) from \(url).")
-                        } catch {
-                            print("ERROR: Could not read PNG data -> \(error.localizedDescription)")
-                        }
-                    } else {
-                        print("ERROR: Could not access security scoped resource.")
-                    }
-                case .failure(let error):
-                    print("ERROR: File import failed -> \(error.localizedDescription)")
+            
+            // MARK: - Portrait Photo Picker
+            .photosPicker(
+                isPresented: $showingPhotoPickerPortrait,
+                selection: $selectedPhotoPortrait,
+                matching: .images,
+                photoLibrary: .shared()
+            )
+            .onChange(of: selectedPhotoPortrait) { newItem in
+                Task {
+                    await loadImageData(from: newItem, isLandscape: false)
                 }
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarBackButtonHidden(true)
+    }
+}
+
+// MARK: - Load Selected Photo via PhotosPicker
+extension EmulatorView {
+    private func loadImageData(from item: PhotosPickerItem?, isLandscape: Bool) async {
+        guard let item = item else { return }
+        
+        do {
+            // Attempt to load raw data (Data) from the selected image
+            if let data = try await item.loadTransferable(type: Data.self) {
+                if isLandscape {
+                    savePNG(data: data, key: "importedPNGLandscape")
+                    importedPNGDataLandscape = data
+                    print("DEBUG: Imported PNG (landscape) from PhotosPicker.")
+                } else {
+                    savePNG(data: data, key: "importedPNGPortrait")
+                    importedPNGDataPortrait = data
+                    print("DEBUG: Imported PNG (portrait) from PhotosPicker.")
+                }
+            } else {
+                print("ERROR: No image data found (possibly canceled or no permissions).")
+            }
+        } catch {
+            print("ERROR: Failed to load image data: \(error.localizedDescription)")
+        }
     }
 }
 
@@ -367,12 +383,12 @@ extension EmulatorView {
 extension EmulatorView {
     private func savePNG(data: Data, key: String) {
         UserDefaults.standard.set(data, forKey: key)
-        print("DEBUG: Custom PNG (\(key)) saved to UserDefaults.")
+        print("DEBUG: Custom image (\(key)) saved to UserDefaults.")
     }
     
     private func loadPNG(key: String) -> Data? {
         if let data = UserDefaults.standard.data(forKey: key) {
-            print("DEBUG: Loaded custom PNG from key: \(key).")
+            print("DEBUG: Loaded custom image from key: \(key).")
             return data
         }
         return nil
@@ -394,7 +410,7 @@ extension EmulatorView {
             object: nil,
             queue: .main
         ) { _ in
-            // optional: handle disconnection
+            // optional disconnection logic
         }
         
         configurePhysicalControllers()
@@ -418,6 +434,7 @@ extension EmulatorView {
     private func handleGamepadInput(_ gamepad: GCExtendedGamepad, webView: WKWebView) {
         handleDirectionPad(gamepad.dpad, webView: webView)
         mapButton(gamepad.buttonA, keyCode: 65, webView: webView)
+        
         let bKeyCode = isAutoSprintEnabled ? 0 : 66
         mapButton(gamepad.buttonB, keyCode: bKeyCode, webView: webView)
     }
@@ -428,7 +445,7 @@ extension EmulatorView {
         mapButton(dpad.left,  keyCode: 37, webView: webView)
         mapButton(dpad.right, keyCode: 39, webView: webView)
         
-        // Automatic sprint if enabled
+        // If auto-sprint is enabled
         if isAutoSprintEnabled {
             if dpad.left.isPressed || dpad.right.isPressed {
                 sendKeyPress(keyCode: 66, webView: webView)
@@ -453,16 +470,16 @@ extension EmulatorView {
 extension EmulatorView {
     private func eventProperties(for keyCode: Int) -> (String, String) {
         switch keyCode {
-            case 37: return ("ArrowLeft",  "ArrowLeft")
-            case 38: return ("ArrowUp",    "ArrowUp")
-            case 39: return ("ArrowRight", "ArrowRight")
-            case 40: return ("ArrowDown",  "ArrowDown")
-            case 32: return ("Space",      " ")
-            case 65: return ("KeyA",       "a")
-            case 66: return ("KeyB",       "b")
-            case 82: return ("KeyR",       "r")
-            case 83: return ("KeyS",       "s")
-            default: return ("", "")
+        case 37: return ("ArrowLeft",  "ArrowLeft")
+        case 38: return ("ArrowUp",    "ArrowUp")
+        case 39: return ("ArrowRight", "ArrowRight")
+        case 40: return ("ArrowDown",  "ArrowDown")
+        case 32: return ("Space",      " ")
+        case 65: return ("KeyA",       "a")
+        case 66: return ("KeyB",       "b")
+        case 82: return ("KeyR",       "r")
+        case 83: return ("KeyS",       "s")
+        default: return ("", "")
         }
     }
     
@@ -471,7 +488,7 @@ extension EmulatorView {
             print("ERROR: WebView is nil. Cannot send key press for \(keyCode)")
             return
         }
-        provideHapticFeedback()
+        provideHapticFeedback()  // Vibrate if allowed
         let (codeValue, keyValue) = eventProperties(for: keyCode)
         
         let jsCode = """
@@ -495,7 +512,7 @@ extension EmulatorView {
             print("ERROR: WebView is nil. Cannot send key up for \(keyCode)")
             return
         }
-        provideHapticFeedback()
+        provideHapticFeedback()  // Vibrate if allowed
         let (codeValue, keyValue) = eventProperties(for: keyCode)
         
         let jsCode = """
@@ -514,7 +531,9 @@ extension EmulatorView {
         webView.evaluateJavaScript(jsCode, completionHandler: nil)
     }
     
+    /// Vibrate only if user enabled Haptic Feedback
     private func provideHapticFeedback() {
+        guard isHapticFeedbackEnabled else { return }
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
         feedbackGenerator.impactOccurred()
     }
@@ -536,6 +555,7 @@ extension EmulatorView {
             print("DEBUG: Auto Sprint enabled.")
         } else {
             autoSprintCancellable?.cancel()
+            // Release the sprint key if it was "held down"
             sendKeyUp(keyCode: 66, webView: webView)
             print("DEBUG: Auto Sprint disabled.")
         }
@@ -632,12 +652,11 @@ struct NESWebView: UIViewRepresentable {
     @ObservedObject var webViewModel: WebViewModel
     
     func makeUIView(context: Context) -> WKWebView {
-        // If we don't already have a WKWebView, create one
+        // Reuse if available
         if webViewModel.webView == nil {
             let newWebView = WKWebView()
             webViewModel.webView = newWebView
             
-            // Load the game only once
             if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
                 newWebView.load(URLRequest(url: url))
                 print("DEBUG: Loaded game: \(game)")
@@ -649,7 +668,7 @@ struct NESWebView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        // Don't reload or recreate on orientation changes
+        // No reload on orientation changes
     }
 }
 
@@ -720,6 +739,7 @@ struct DraggableButtonAreaView: View {
                         alignment: .center
                     )
                 
+                // Resizing handle
                 Circle()
                     .fill(Color.white)
                     .frame(width: 20, height: 20)
@@ -747,6 +767,7 @@ struct DraggableButtonAreaView: View {
                     )
             }
         }
+        // Position it
         .position(
             x: min(
                 max(button.x + dragOffset.width, button.width / 2),
@@ -757,6 +778,7 @@ struct DraggableButtonAreaView: View {
                 screenSize.height - button.height / 2
             )
         )
+        // Adjust position while editing or handle press/release if not
         .gesture(
             isEditing
                 ? DragGesture()
@@ -776,15 +798,14 @@ struct DraggableButtonAreaView: View {
                     }
                 : DragGesture(minimumDistance: 0)
                     .onChanged { _ in
-                        // Press
                         pressHandler(button.keyCode)
                     }
                     .onEnded { _ in
-                        // Release
                         releaseHandler(button.keyCode)
                     }
         )
         .onAppear {
+            // store the initial size for resizing
             currentWidth = button.width
             currentHeight = button.height
         }
@@ -805,7 +826,7 @@ struct PNGOverlay: View {
             let screenSize = geometry.size
             
             ZStack {
-                // Show PNG if available
+                // Show imported image if available
                 if let data = importedPNGData,
                    let uiImage = UIImage(data: data) {
                     

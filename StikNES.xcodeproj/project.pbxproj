@@ -421,6 +421,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StikNES/Info.plist;
 				INFOPLIST_KEY_GCSupportsGameMode = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to import images for customization.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -452,6 +453,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StikNES/Info.plist;
 				INFOPLIST_KEY_GCSupportsGameMode = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to import images for customization.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
