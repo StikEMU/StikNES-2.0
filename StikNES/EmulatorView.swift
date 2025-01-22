@@ -52,7 +52,6 @@ struct EmulatorView: View {
     ]
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait: Data? = nil
-    
     var body: some View {
         let nesWebView = NESWebView(game: game, webViewModel: webViewModel)
         NavigationView {
@@ -69,11 +68,11 @@ struct EmulatorView: View {
                             PNGOverlay(
                                 pressHandler: { keyCode in
                                     guard keyCode > 0 else { return }
-                                    sendKeyPress(keyCode: keyCode, webView: webViewModel.webView)
+                                    sendKeyPress(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
                                 },
                                 releaseHandler: { keyCode in
                                     guard keyCode > 0 else { return }
-                                    sendKeyUp(keyCode: keyCode, webView: webViewModel.webView)
+                                    sendKeyUp(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
                                 },
                                 isEditing: isEditingLayout,
                                 buttons: displayedButtons,
@@ -88,11 +87,11 @@ struct EmulatorView: View {
                             PNGOverlay(
                                 pressHandler: { keyCode in
                                     guard keyCode > 0 else { return }
-                                    sendKeyPress(keyCode: keyCode, webView: webViewModel.webView)
+                                    sendKeyPress(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
                                 },
                                 releaseHandler: { keyCode in
                                     guard keyCode > 0 else { return }
-                                    sendKeyUp(keyCode: keyCode, webView: webViewModel.webView)
+                                    sendKeyUp(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
                                 },
                                 isEditing: isEditingLayout,
                                 buttons: displayedButtons,
@@ -188,7 +187,7 @@ struct EmulatorView: View {
                 Button("Quit", role: .destructive) {
                     quitGame()
                 }
-                Button("Cancel", role: .cancel) { }
+                Button("Cancel", role: .cancel) {}
             }
             .photosPicker(
                 isPresented: $showingPhotoPickerLandscape,
@@ -216,7 +215,6 @@ struct EmulatorView: View {
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarBackButtonHidden(true)
     }
-    
     private func loadImageData(from item: PhotosPickerItem?, isLandscape: Bool) async {
         guard let item = item else { return }
         do {
@@ -224,25 +222,17 @@ struct EmulatorView: View {
                 if isLandscape {
                     savePNG(data: data, key: "importedPNGLandscape")
                     importedPNGDataLandscape = data
-                    print("DEBUG: Imported PNG (landscape) from PhotosPicker.")
                 } else {
                     savePNG(data: data, key: "importedPNGPortrait")
                     importedPNGDataPortrait = data
-                    print("DEBUG: Imported PNG (portrait) from PhotosPicker.")
                 }
-            } else {
-                print("ERROR: No image data found (possibly canceled or no permissions).")
             }
-        } catch {
-            print("ERROR: Failed to load image data: \(error.localizedDescription)")
-        }
+        } catch {}
     }
-    
     private func saveAllButtonLayouts() {
         saveButtonArray(customButtonsPortrait, key: "buttonLayoutPortrait")
         saveButtonArray(customButtonsLandscape, key: "buttonLayoutLandscape")
     }
-    
     private func loadAllButtonLayouts() {
         if let loaded = loadButtonArray(key: "buttonLayoutPortrait") {
             customButtonsPortrait = loaded
@@ -251,7 +241,6 @@ struct EmulatorView: View {
             customButtonsLandscape = loaded
         }
     }
-    
     private func saveCurrentOrientationLayout() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first else { return }
@@ -263,7 +252,6 @@ struct EmulatorView: View {
             saveButtonArray(customButtonsLandscape, key: "buttonLayoutLandscape")
         }
     }
-    
     private func resetToDefaultLayoutCurrent() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first else { return }
@@ -295,108 +283,78 @@ struct EmulatorView: View {
             ]
         }
     }
-    
     private func saveButtonArray(_ array: [CustomButton], key: String) {
         let encoder = JSONEncoder()
         do {
             let data = try encoder.encode(array)
             UserDefaults.standard.set(data, forKey: key)
-            print("DEBUG: \(key) saved successfully.")
-        } catch {
-            print("ERROR: Failed to save \(key) - \(error.localizedDescription)")
-        }
+        } catch {}
     }
-    
     private func loadButtonArray(key: String) -> [CustomButton]? {
-        guard let data = UserDefaults.standard.data(forKey: key) else {
-            print("DEBUG: No saved layout found for \(key)")
-            return nil
-        }
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
         let decoder = JSONDecoder()
         do {
-            let loadedButtons = try decoder.decode([CustomButton].self, from: data)
-            print("DEBUG: Loaded layout for \(key).")
-            return loadedButtons
+            return try decoder.decode([CustomButton].self, from: data)
         } catch {
-            print("ERROR: Failed to load \(key) - \(error.localizedDescription)")
             return nil
         }
     }
-    
     private func savePNG(data: Data, key: String) {
         UserDefaults.standard.set(data, forKey: key)
-        print("DEBUG: Custom image (\(key)) saved to UserDefaults.")
     }
-    
     private func loadPNG(key: String) -> Data? {
         if let data = UserDefaults.standard.data(forKey: key) {
-            print("DEBUG: Loaded custom image from key: \(key).")
             return data
         }
         return nil
     }
-    
     private func setupPhysicalController() {
-        NotificationCenter.default.addObserver(
-            forName: .GCControllerDidConnect,
-            object: nil,
-            queue: .main
-        ) { _ in
+        NotificationCenter.default.addObserver(forName: .GCControllerDidConnect, object: nil, queue: .main) { _ in
             configurePhysicalControllers()
         }
-        NotificationCenter.default.addObserver(
-            forName: .GCControllerDidDisconnect,
-            object: nil,
-            queue: .main
-        ) { _ in }
+        NotificationCenter.default.addObserver(forName: .GCControllerDidDisconnect, object: nil, queue: .main) { _ in }
         configurePhysicalControllers()
     }
-    
     private func stopListeningForPhysicalControllers() {
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidConnect, object: nil)
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidDisconnect, object: nil)
     }
-    
     private func configurePhysicalControllers() {
         for controller in GCController.controllers() {
             guard let gamepad = controller.extendedGamepad else { continue }
             gamepad.valueChangedHandler = { gamepad, _ in
                 guard let webView = webViewModel.webView else { return }
-                self.handleGamepadInput(gamepad, webView: webView)
+                handleGamepadInput(gamepad, webView: webView)
             }
         }
     }
-    
     private func handleGamepadInput(_ gamepad: GCExtendedGamepad, webView: WKWebView) {
         handleDirectionPad(gamepad.dpad, webView: webView)
-        mapButton(gamepad.buttonA, keyCode: 65, webView: webView)
+        mapButton(gamepad.buttonA, keyCode: 65, webView: webView, provideHaptic: true)
         let bKeyCode = isAutoSprintEnabled ? 0 : 66
-        mapButton(gamepad.buttonB, keyCode: bKeyCode, webView: webView)
+        mapButton(gamepad.buttonB, keyCode: bKeyCode, webView: webView, provideHaptic: true)
     }
-    
     private func handleDirectionPad(_ dpad: GCControllerDirectionPad, webView: WKWebView) {
-        mapButton(dpad.up, keyCode: 38, webView: webView)
-        mapButton(dpad.down, keyCode: 40, webView: webView)
-        mapButton(dpad.left, keyCode: 37, webView: webView)
-        mapButton(dpad.right, keyCode: 39, webView: webView)
+        mapButton(dpad.up, keyCode: 38, webView: webView, provideHaptic: true)
+        mapButton(dpad.down, keyCode: 40, webView: webView, provideHaptic: true)
+        mapButton(dpad.left, keyCode: 37, webView: webView, provideHaptic: true)
+        mapButton(dpad.right, keyCode: 39, webView: webView, provideHaptic: true)
         if isAutoSprintEnabled {
             if dpad.left.isPressed || dpad.right.isPressed {
-                sendKeyPress(keyCode: 66, webView: webView)
+                sendKeyPress(keyCode: 66, webView: webView, shouldProvideHaptic: false)
             } else {
-                sendKeyUp(keyCode: 66, webView: webView)
+                sendKeyUp(keyCode: 66, webView: webView, shouldProvideHaptic: false)
             }
         }
     }
-    
-    private func mapButton(_ button: GCControllerButtonInput, keyCode: Int, webView: WKWebView) {
+    private func mapButton(_ button: GCControllerButtonInput, keyCode: Int, webView: WKWebView, provideHaptic: Bool = true) {
         guard keyCode > 0 else { return }
         if button.isPressed {
-            sendKeyPress(keyCode: keyCode, webView: webView)
+            sendKeyPress(keyCode: keyCode, webView: webView, shouldProvideHaptic: provideHaptic)
         } else {
-            sendKeyUp(keyCode: keyCode, webView: webView)
+            sendKeyUp(keyCode: keyCode, webView: webView, shouldProvideHaptic: provideHaptic)
         }
     }
-    
     private func eventProperties(for keyCode: Int) -> (String, String) {
         switch keyCode {
         case 37: return ("ArrowLeft", "ArrowLeft")
@@ -411,13 +369,9 @@ struct EmulatorView: View {
         default: return ("", "")
         }
     }
-    
-    private func sendKeyPress(keyCode: Int, webView: WKWebView?) {
-        guard let webView = webView else {
-            print("ERROR: WebView is nil. Cannot send key press for \(keyCode)")
-            return
-        }
-        provideHapticFeedback()
+    private func sendKeyPress(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool = true) {
+        guard let webView = webView else { return }
+        if shouldProvideHaptic { provideHapticFeedback() }
         let (codeValue, keyValue) = eventProperties(for: keyCode)
         let jsCode = """
         (function() {
@@ -434,13 +388,9 @@ struct EmulatorView: View {
         """
         webView.evaluateJavaScript(jsCode, completionHandler: nil)
     }
-    
-    private func sendKeyUp(keyCode: Int, webView: WKWebView?) {
-        guard let webView = webView else {
-            print("ERROR: WebView is nil. Cannot send key up for \(keyCode)")
-            return
-        }
-        provideHapticFeedback()
+    private func sendKeyUp(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool = true) {
+        guard let webView = webView else { return }
+        if shouldProvideHaptic { provideHapticFeedback() }
         let (codeValue, keyValue) = eventProperties(for: keyCode)
         let jsCode = """
         (function() {
@@ -457,35 +407,27 @@ struct EmulatorView: View {
         """
         webView.evaluateJavaScript(jsCode, completionHandler: nil)
     }
-    
     private func provideHapticFeedback() {
         guard isHapticFeedbackEnabled else { return }
-        let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
+        feedbackGenerator.prepare()
         feedbackGenerator.impactOccurred()
     }
-    
     private func handleAutoSprintToggle(enabled: Bool) {
-        guard let webView = webViewModel.webView else {
-            print("ERROR: WebView is nil. Cannot handle Auto Sprint toggle.")
-            return
-        }
+        guard let webView = webViewModel.webView else { return }
         if enabled {
             autoSprintCancellable = Timer.publish(every: 0.1, on: .main, in: .common)
                 .autoconnect()
                 .sink { _ in
-                    self.sendKeyPress(keyCode: 66, webView: webView)
+                    sendKeyPress(keyCode: 66, webView: webView, shouldProvideHaptic: false)
                 }
-            print("DEBUG: Auto Sprint enabled.")
         } else {
             autoSprintCancellable?.cancel()
-            sendKeyUp(keyCode: 66, webView: webView)
-            print("DEBUG: Auto Sprint disabled.")
+            sendKeyUp(keyCode: 66, webView: webView, shouldProvideHaptic: false)
         }
     }
-    
     private func quitGame() {
         dismiss()
-        print("DEBUG: Quit game triggered.")
     }
 }
 
@@ -560,9 +502,6 @@ struct NESWebView: UIViewRepresentable {
             webViewModel.webView = newWebView
             if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
                 newWebView.load(URLRequest(url: url))
-                print("DEBUG: Loaded game: \(game)")
-            } else {
-                print("ERROR: Invalid game URL.")
             }
         }
         return webViewModel.webView!
