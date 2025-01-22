@@ -52,6 +52,7 @@ struct EmulatorView: View {
     ]
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait: Data? = nil
+    @State private var activePresses = Set<Int>()
     var body: some View {
         let nesWebView = NESWebView(game: game, webViewModel: webViewModel)
         NavigationView {
@@ -67,12 +68,10 @@ struct EmulatorView: View {
                                 .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
                             PNGOverlay(
                                 pressHandler: { keyCode in
-                                    guard keyCode > 0 else { return }
-                                    sendKeyPress(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
+                                    onScreenPress(keyCode: keyCode)
                                 },
                                 releaseHandler: { keyCode in
-                                    guard keyCode > 0 else { return }
-                                    sendKeyUp(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
+                                    onScreenRelease(keyCode: keyCode)
                                 },
                                 isEditing: isEditingLayout,
                                 buttons: displayedButtons,
@@ -86,12 +85,10 @@ struct EmulatorView: View {
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                             PNGOverlay(
                                 pressHandler: { keyCode in
-                                    guard keyCode > 0 else { return }
-                                    sendKeyPress(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
+                                    onScreenPress(keyCode: keyCode)
                                 },
                                 releaseHandler: { keyCode in
-                                    guard keyCode > 0 else { return }
-                                    sendKeyUp(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
+                                    onScreenRelease(keyCode: keyCode)
                                 },
                                 isEditing: isEditingLayout,
                                 buttons: displayedButtons,
@@ -104,12 +101,13 @@ struct EmulatorView: View {
             }
             .navigationBarBackButtonHidden(true)
             .onAppear {
-                guard !didInitialize else { return }
-                didInitialize = true
-                setupPhysicalController()
-                loadAllButtonLayouts()
-                importedPNGDataLandscape = loadPNG(key: "importedPNGLandscape")
-                importedPNGDataPortrait = loadPNG(key: "importedPNGPortrait")
+                if !didInitialize {
+                    didInitialize = true
+                    setupPhysicalController()
+                    loadAllButtonLayouts()
+                    importedPNGDataLandscape = loadPNG(key: "importedPNGLandscape")
+                    importedPNGDataPortrait = loadPNG(key: "importedPNGPortrait")
+                }
             }
             .onDisappear {
                 stopListeningForPhysicalControllers()
@@ -215,6 +213,18 @@ struct EmulatorView: View {
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarBackButtonHidden(true)
     }
+    private func onScreenPress(keyCode: Int) {
+        if !activePresses.contains(keyCode) {
+            activePresses.insert(keyCode)
+            sendKeyPress(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
+        }
+    }
+    private func onScreenRelease(keyCode: Int) {
+        if activePresses.contains(keyCode) {
+            activePresses.remove(keyCode)
+            sendKeyUp(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
+        }
+    }
     private func loadImageData(from item: PhotosPickerItem?, isLandscape: Bool) async {
         guard let item = item else { return }
         do {
@@ -285,28 +295,20 @@ struct EmulatorView: View {
     }
     private func saveButtonArray(_ array: [CustomButton], key: String) {
         let encoder = JSONEncoder()
-        do {
-            let data = try encoder.encode(array)
+        if let data = try? encoder.encode(array) {
             UserDefaults.standard.set(data, forKey: key)
-        } catch {}
+        }
     }
     private func loadButtonArray(key: String) -> [CustomButton]? {
         guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
         let decoder = JSONDecoder()
-        do {
-            return try decoder.decode([CustomButton].self, from: data)
-        } catch {
-            return nil
-        }
+        return try? decoder.decode([CustomButton].self, from: data)
     }
     private func savePNG(data: Data, key: String) {
         UserDefaults.standard.set(data, forKey: key)
     }
     private func loadPNG(key: String) -> Data? {
-        if let data = UserDefaults.standard.data(forKey: key) {
-            return data
-        }
-        return nil
+        UserDefaults.standard.data(forKey: key)
     }
     private func setupPhysicalController() {
         NotificationCenter.default.addObserver(forName: .GCControllerDidConnect, object: nil, queue: .main) { _ in
@@ -330,29 +332,63 @@ struct EmulatorView: View {
     }
     private func handleGamepadInput(_ gamepad: GCExtendedGamepad, webView: WKWebView) {
         handleDirectionPad(gamepad.dpad, webView: webView)
-        mapButton(gamepad.buttonA, keyCode: 65, webView: webView, provideHaptic: true)
+        let aKey = 65
+        if gamepad.buttonA.isPressed {
+            if !activePresses.contains(aKey) {
+                activePresses.insert(aKey)
+                sendKeyPress(keyCode: aKey, webView: webView, shouldProvideHaptic: true)
+            }
+        } else {
+            if activePresses.contains(aKey) {
+                activePresses.remove(aKey)
+                sendKeyUp(keyCode: aKey, webView: webView, shouldProvideHaptic: true)
+            }
+        }
         let bKeyCode = isAutoSprintEnabled ? 0 : 66
-        mapButton(gamepad.buttonB, keyCode: bKeyCode, webView: webView, provideHaptic: true)
-    }
-    private func handleDirectionPad(_ dpad: GCControllerDirectionPad, webView: WKWebView) {
-        mapButton(dpad.up, keyCode: 38, webView: webView, provideHaptic: true)
-        mapButton(dpad.down, keyCode: 40, webView: webView, provideHaptic: true)
-        mapButton(dpad.left, keyCode: 37, webView: webView, provideHaptic: true)
-        mapButton(dpad.right, keyCode: 39, webView: webView, provideHaptic: true)
-        if isAutoSprintEnabled {
-            if dpad.left.isPressed || dpad.right.isPressed {
-                sendKeyPress(keyCode: 66, webView: webView, shouldProvideHaptic: false)
+        if bKeyCode > 0 {
+            if gamepad.buttonB.isPressed {
+                if !activePresses.contains(bKeyCode) {
+                    activePresses.insert(bKeyCode)
+                    sendKeyPress(keyCode: bKeyCode, webView: webView, shouldProvideHaptic: true)
+                }
             } else {
-                sendKeyUp(keyCode: 66, webView: webView, shouldProvideHaptic: false)
+                if activePresses.contains(bKeyCode) {
+                    activePresses.remove(bKeyCode)
+                    sendKeyUp(keyCode: bKeyCode, webView: webView, shouldProvideHaptic: true)
+                }
             }
         }
     }
-    private func mapButton(_ button: GCControllerButtonInput, keyCode: Int, webView: WKWebView, provideHaptic: Bool = true) {
-        guard keyCode > 0 else { return }
-        if button.isPressed {
-            sendKeyPress(keyCode: keyCode, webView: webView, shouldProvideHaptic: provideHaptic)
+    private func handleDirectionPad(_ dpad: GCControllerDirectionPad, webView: WKWebView) {
+        checkDpad(dpad.up, 38, webView)
+        checkDpad(dpad.down, 40, webView)
+        checkDpad(dpad.left, 37, webView)
+        checkDpad(dpad.right, 39, webView)
+        if isAutoSprintEnabled {
+            if dpad.left.isPressed || dpad.right.isPressed {
+                if !activePresses.contains(66) {
+                    activePresses.insert(66)
+                    sendKeyPress(keyCode: 66, webView: webView, shouldProvideHaptic: false)
+                }
+            } else {
+                if activePresses.contains(66) {
+                    activePresses.remove(66)
+                    sendKeyUp(keyCode: 66, webView: webView, shouldProvideHaptic: false)
+                }
+            }
+        }
+    }
+    private func checkDpad(_ pad: GCControllerButtonInput, _ code: Int, _ webView: WKWebView) {
+        if pad.isPressed {
+            if !activePresses.contains(code) {
+                activePresses.insert(code)
+                sendKeyPress(keyCode: code, webView: webView, shouldProvideHaptic: true)
+            }
         } else {
-            sendKeyUp(keyCode: keyCode, webView: webView, shouldProvideHaptic: provideHaptic)
+            if activePresses.contains(code) {
+                activePresses.remove(code)
+                sendKeyUp(keyCode: code, webView: webView, shouldProvideHaptic: true)
+            }
         }
     }
     private func eventProperties(for keyCode: Int) -> (String, String) {
@@ -367,63 +403,69 @@ struct EmulatorView: View {
         case 82: return ("KeyR", "r")
         case 83: return ("KeyS", "s")
         default: return ("", "")
+    }
+    }
+    private func sendKeyPress(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool) {
+        guard let webView = webView else { return }
+        if shouldProvideHaptic && isHapticFeedbackEnabled {
+            let f = UIImpactFeedbackGenerator(style: .rigid)
+            f.prepare()
+            f.impactOccurred()
         }
-    }
-    private func sendKeyPress(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool = true) {
-        guard let webView = webView else { return }
-        if shouldProvideHaptic { provideHapticFeedback() }
-        let (codeValue, keyValue) = eventProperties(for: keyCode)
-        let jsCode = """
+        let (c, k) = eventProperties(for: keyCode)
+        let js = """
         (function() {
-            var event = new KeyboardEvent('keydown', {
+            var e = new KeyboardEvent('keydown', {
                 bubbles: true,
                 cancelable: true,
-                code: '\(codeValue)',
-                key: '\(keyValue)',
+                code: '\(c)',
+                key: '\(k)',
                 keyCode: \(keyCode),
                 which: \(keyCode)
             });
-            document.dispatchEvent(event);
+            document.dispatchEvent(e);
         })();
         """
-        webView.evaluateJavaScript(jsCode, completionHandler: nil)
+        webView.evaluateJavaScript(js, completionHandler: nil)
     }
-    private func sendKeyUp(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool = true) {
+    private func sendKeyUp(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool) {
         guard let webView = webView else { return }
-        if shouldProvideHaptic { provideHapticFeedback() }
-        let (codeValue, keyValue) = eventProperties(for: keyCode)
-        let jsCode = """
+        if shouldProvideHaptic && isHapticFeedbackEnabled {
+            let f = UIImpactFeedbackGenerator(style: .rigid)
+            f.prepare()
+            f.impactOccurred()
+        }
+        let (c, k) = eventProperties(for: keyCode)
+        let js = """
         (function() {
-            var event = new KeyboardEvent('keyup', {
+            var e = new KeyboardEvent('keyup', {
                 bubbles: true,
                 cancelable: true,
-                code: '\(codeValue)',
-                key: '\(keyValue)',
+                code: '\(c)',
+                key: '\(k)',
                 keyCode: \(keyCode),
                 which: \(keyCode)
             });
-            document.dispatchEvent(event);
+            document.dispatchEvent(e);
         })();
         """
-        webView.evaluateJavaScript(jsCode, completionHandler: nil)
-    }
-    private func provideHapticFeedback() {
-        guard isHapticFeedbackEnabled else { return }
-        let feedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
-        feedbackGenerator.prepare()
-        feedbackGenerator.impactOccurred()
+        webView.evaluateJavaScript(js, completionHandler: nil)
     }
     private func handleAutoSprintToggle(enabled: Bool) {
-        guard let webView = webViewModel.webView else { return }
+        guard let w = webViewModel.webView else { return }
         if enabled {
-            autoSprintCancellable = Timer.publish(every: 0.1, on: .main, in: .common)
-                .autoconnect()
-                .sink { _ in
-                    sendKeyPress(keyCode: 66, webView: webView, shouldProvideHaptic: false)
+            autoSprintCancellable = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect().sink { _ in
+                if !activePresses.contains(66) {
+                    activePresses.insert(66)
+                    sendKeyPress(keyCode: 66, webView: w, shouldProvideHaptic: false)
                 }
+            }
         } else {
             autoSprintCancellable?.cancel()
-            sendKeyUp(keyCode: 66, webView: webView, shouldProvideHaptic: false)
+            if activePresses.contains(66) {
+                activePresses.remove(66)
+                sendKeyUp(keyCode: 66, webView: w, shouldProvideHaptic: false)
+            }
         }
     }
     private func quitGame() {
@@ -498,10 +540,10 @@ struct NESWebView: UIViewRepresentable {
     @ObservedObject var webViewModel: WebViewModel
     func makeUIView(context: Context) -> WKWebView {
         if webViewModel.webView == nil {
-            let newWebView = WKWebView()
-            webViewModel.webView = newWebView
+            let w = WKWebView()
+            webViewModel.webView = w
             if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
-                newWebView.load(URLRequest(url: url))
+                w.load(URLRequest(url: url))
             }
         }
         return webViewModel.webView!
@@ -566,16 +608,16 @@ struct DraggableButtonAreaView: View {
                     .padding(2)
                     .gesture(
                         DragGesture()
-                            .onChanged { value in
-                                let deltaW = value.translation.width
-                                let deltaH = value.translation.height
-                                let newWidth = max(minButtonSize, currentWidth + deltaW)
-                                let newHeight = max(minButtonSize, currentHeight + deltaH)
-                                if button.x + newWidth <= screenSize.width {
-                                    button.width = newWidth
+                            .onChanged { v in
+                                let dw = v.translation.width
+                                let dh = v.translation.height
+                                let nw = max(minButtonSize, currentWidth + dw)
+                                let nh = max(minButtonSize, currentHeight + dh)
+                                if button.x + nw <= screenSize.width {
+                                    button.width = nw
                                 }
-                                if button.y + newHeight <= screenSize.height {
-                                    button.height = newHeight
+                                if button.y + nh <= screenSize.height {
+                                    button.height = nh
                                 }
                             }
                             .onEnded { _ in
@@ -586,39 +628,27 @@ struct DraggableButtonAreaView: View {
             }
         }
         .position(
-            x: min(
-                max(button.x + dragOffset.width, button.width / 2),
-                screenSize.width - button.width / 2
-            ),
-            y: min(
-                max(button.y + dragOffset.height, button.height / 2),
-                screenSize.height - button.height / 2
-            )
+            x: min(max(button.x + dragOffset.width, button.width / 2), screenSize.width - button.width / 2),
+            y: min(max(button.y + dragOffset.height, button.height / 2), screenSize.height - button.height / 2)
         )
         .gesture(
             isEditing
-                ? DragGesture()
-                    .onChanged { value in
-                        dragOffset = value.translation
-                    }
-                    .onEnded { value in
-                        button.x = min(
-                            max(button.x + value.translation.width, button.width / 2),
-                            screenSize.width - button.width / 2
-                        )
-                        button.y = min(
-                            max(button.y + value.translation.height, button.height / 2),
-                            screenSize.height - button.height / 2
-                        )
-                        dragOffset = .zero
-                    }
-                : DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        pressHandler(button.keyCode)
-                    }
-                    .onEnded { _ in
-                        releaseHandler(button.keyCode)
-                    }
+            ? DragGesture()
+                .onChanged { v in
+                    dragOffset = v.translation
+                }
+                .onEnded { v in
+                    button.x = min(max(button.x + v.translation.width, button.width / 2), screenSize.width - button.width / 2)
+                    button.y = min(max(button.y + v.translation.height, button.height / 2), screenSize.height - button.height / 2)
+                    dragOffset = .zero
+                }
+            : DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    pressHandler(button.keyCode)
+                }
+                .onEnded { _ in
+                    releaseHandler(button.keyCode)
+                }
         )
         .onAppear {
             currentWidth = button.width
@@ -634,26 +664,26 @@ struct PNGOverlay: View {
     @Binding var buttons: [CustomButton]
     let importedPNGData: Data?
     var body: some View {
-        GeometryReader { geometry in
-            let screenSize = geometry.size
+        GeometryReader { g in
+            let s = g.size
             ZStack {
-                if let data = importedPNGData, let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
+                if let d = importedPNGData, let img = UIImage(data: d) {
+                    Image(uiImage: img)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: screenSize.width, height: screenSize.height)
+                        .frame(width: s.width, height: s.height)
                 } else {
                     Rectangle()
                         .fill(Color.gray.opacity(0.5))
-                        .frame(width: screenSize.width, height: screenSize.height)
+                        .frame(width: s.width, height: s.height)
                     Text("No Skin Imported")
                         .foregroundColor(.white)
                 }
-                ForEach($buttons) { $button in
+                ForEach($buttons) { $btn in
                     DraggableButtonAreaView(
-                        button: $button,
+                        button: $btn,
                         isEditing: isEditing,
-                        screenSize: screenSize,
+                        screenSize: s,
                         pressHandler: pressHandler,
                         releaseHandler: releaseHandler
                     )
