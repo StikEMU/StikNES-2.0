@@ -11,7 +11,7 @@ import Swifter
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     var server: HttpServer?
-    var emulatorDirectory: URL? // Define the emulator directory property
+    var emulatorDirectory: URL?
 
     func application(
         _ application: UIApplication,
@@ -23,11 +23,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func setupEmulatorFiles() {
-        // Get the temporary directory
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
         let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
 
-        // Create the emulator directory if it doesn't exist
         let fileManager = FileManager.default
         if !fileManager.fileExists(atPath: emulatorPath.path) {
             do {
@@ -38,14 +36,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
 
-        // Define the filenames of the emulator files
         let emulatorFiles = [
             "index.html",
             "nes_rust_wasm.js",
             "nes_rust_wasm_bg.wasm"
         ]
 
-        // Copy each file from the bundle to the temporary directory
         for fileName in emulatorFiles {
             guard let bundleURL = Bundle.main.url(forResource: fileName, withExtension: nil) else {
                 print("Failed to find \(fileName) in bundle")
@@ -55,7 +51,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let destinationURL = emulatorPath.appendingPathComponent(fileName)
             do {
                 if fileManager.fileExists(atPath: destinationURL.path) {
-                    try fileManager.removeItem(at: destinationURL) // Remove existing files
+                    try fileManager.removeItem(at: destinationURL)
                 }
                 try fileManager.copyItem(at: bundleURL, to: destinationURL)
             } catch {
@@ -76,9 +72,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         server = HttpServer()
 
         if let server = server {
-            // Middleware to allow only localhost connections
             server.middleware.append { request in
-                // Check if the request's address is localhost
                 if request.address != "127.0.0.1" {
                     let rejectionMessage = """
                     -------------------------------------------------------------------
@@ -96,10 +90,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         try writer.write(rejectionMessage.data(using: .utf8) ?? Data())
                     })
                 }
-                return nil // Allow the request to proceed
+                return nil
             }
 
-            // Serve index.html at the root
             server["/"] = { _ in
                 let indexPath = emulatorDirectory.appendingPathComponent("index.html").path
                 do {
@@ -110,10 +103,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
 
-            // Serve all other files
             server["/:path"] = shareFilesFromDirectory(emulatorDirectory.path)
 
-            // Start the server on localhost (127.0.0.1)
             do {
                 try server.start(8080, forceIPv4: true)
                 print("Server started at http://127.0.0.1:8080")

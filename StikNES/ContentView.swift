@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Game Model
 struct Game: Identifiable, Hashable, Codable {
     let id: UUID
     let name: String
@@ -20,17 +19,13 @@ struct Game: Identifiable, Hashable, Codable {
     }
 }
 
-// MARK: - ContentView
 struct ContentView: View {
     @State private var importedGames: [Game] = []
     @State private var showFileImporter = false
     @State private var selectedGame: Game?
-
-    // For picking an image
     @State private var showImagePicker = false
     @State private var gamePendingImage: Game?
 
-    // Configure how the grid will adapt
     private let columns = [
         GridItem(.adaptive(minimum: 140), spacing: 20)
     ]
@@ -38,19 +33,15 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Solid black background
-                Color.black
-                    .ignoresSafeArea()
+                Color.black.ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Games displayed in a grid of “cards”
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 20) {
                             ForEach(importedGames) { game in
                                 GameCardView(
                                     game: game,
                                     onLongPressSetPhoto: {
-                                        // Trigger the image picker for this game
                                         gamePendingImage = game
                                         showImagePicker = true
                                     },
@@ -66,11 +57,9 @@ struct ContentView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
                     }
-
                     Spacer()
                 }
 
-                // Hidden NavigationLink triggered by tapping a game card
                 if let selectedGame = selectedGame {
                     NavigationLink(
                         destination: EmulatorView(game: selectedGame.name)
@@ -85,13 +74,12 @@ struct ContentView: View {
             }
             .fileImporter(
                 isPresented: $showFileImporter,
-                allowedContentTypes: [.item],
+                allowedContentTypes: [.init(filenameExtension: "nes")!],
                 allowsMultipleSelection: false
             ) { result in
                 handleFileImport(result: result)
             }
             .onAppear(perform: loadImportedGames)
-            // Navigation Bar Configuration
             .navigationTitle("StikNES")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -124,40 +112,29 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - File Importing
-
     private func handleFileImport(result: Result<[URL], Error>) {
         do {
             let selectedFiles = try result.get()
             guard let selectedFile = selectedFiles.first else { return }
+            guard selectedFile.pathExtension.lowercased() == "nes" else { return }
 
-            // Access security-scoped resource
-            guard selectedFile.startAccessingSecurityScopedResource() else {
-                print("Failed to access security-scoped resource")
-                return
-            }
+            guard selectedFile.startAccessingSecurityScopedResource() else { return }
             defer { selectedFile.stopAccessingSecurityScopedResource() }
 
-            // Copy file to an "Emulator" folder in temporary directory
             let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
             let destinationURL = emulatorPath.appendingPathComponent(selectedFile.lastPathComponent)
 
             let fileManager = FileManager.default
             if !fileManager.fileExists(atPath: emulatorPath.path) {
-                try fileManager.createDirectory(
-                    at: emulatorPath,
-                    withIntermediateDirectories: true
-                )
+                try fileManager.createDirectory(at: emulatorPath, withIntermediateDirectories: true)
             }
 
-            // Overwrite file if it already exists
             if fileManager.fileExists(atPath: destinationURL.path) {
                 try fileManager.removeItem(at: destinationURL)
             }
             try fileManager.copyItem(at: selectedFile, to: destinationURL)
 
-            // Add to list and save
             let game = Game(name: selectedFile.lastPathComponent)
             importedGames.append(game)
             saveImportedGames()
@@ -166,17 +143,12 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Deleting Games
-
     private func deleteGame(_ game: Game) {
-        // Remove the game from the array
         if let index = importedGames.firstIndex(where: { $0.id == game.id }) {
             importedGames.remove(at: index)
             saveImportedGames()
         }
     }
-
-    // MARK: - Data Persistence
 
     private func saveImportedGames() {
         do {
@@ -197,7 +169,6 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Game Card View
 struct GameCardView: View {
     let game: Game
     let onLongPressSetPhoto: () -> Void
@@ -205,7 +176,6 @@ struct GameCardView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            // If there's a custom image, show it; otherwise show placeholder icon
             if let imageData = game.imageData,
                let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
@@ -218,8 +188,7 @@ struct GameCardView: View {
                     .foregroundColor(.white)
             }
 
-            // Show full file name (including .nes) without truncation
-            Text(game.name)
+            Text((game.name as NSString).deletingPathExtension)
                 .font(.headline)
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
@@ -227,12 +196,9 @@ struct GameCardView: View {
                 .minimumScaleFactor(0.5)
         }
         .frame(maxWidth: .infinity, minHeight: 140)
-        // Card styling
         .padding()
         .background(Color.gray.opacity(0.2))
         .cornerRadius(12)
-
-        // Context menu on long press
         .contextMenu {
             Button {
                 onLongPressSetPhoto()
@@ -249,7 +215,6 @@ struct GameCardView: View {
     }
 }
 
-// MARK: - ImagePicker (UIKit)
 struct ImagePicker: UIViewControllerRepresentable {
     var onImagePicked: (UIImage?) -> Void
 
@@ -260,13 +225,12 @@ struct ImagePicker: UIViewControllerRepresentable {
         return picker
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) { }
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
-    // Coordinator to handle picker callbacks
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: ImagePicker
 
@@ -276,7 +240,7 @@ struct ImagePicker: UIViewControllerRepresentable {
 
         func imagePickerController(
             _ picker: UIImagePickerController,
-            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
         ) {
             let image = info[.originalImage] as? UIImage
             parent.onImagePicked(image)
