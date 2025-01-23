@@ -67,15 +67,12 @@ struct EmulatorView: View {
                             nesWebView
                                 .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
                             PNGOverlay(
-                                pressHandler: { keyCode in
-                                    onScreenPress(keyCode: keyCode)
-                                },
-                                releaseHandler: { keyCode in
-                                    onScreenRelease(keyCode: keyCode)
-                                },
+                                pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
+                                releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
                                 isEditing: isEditingLayout,
                                 buttons: displayedButtons,
-                                importedPNGData: pngDataToUse
+                                importedPNGData: pngDataToUse,
+                                isPortrait: true
                             )
                             .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
                         }
@@ -84,15 +81,12 @@ struct EmulatorView: View {
                             nesWebView
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                             PNGOverlay(
-                                pressHandler: { keyCode in
-                                    onScreenPress(keyCode: keyCode)
-                                },
-                                releaseHandler: { keyCode in
-                                    onScreenRelease(keyCode: keyCode)
-                                },
+                                pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
+                                releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
                                 isEditing: isEditingLayout,
                                 buttons: displayedButtons,
-                                importedPNGData: pngDataToUse
+                                importedPNGData: pngDataToUse,
+                                isPortrait: false
                             )
                             .edgesIgnoringSafeArea(.all)
                         }
@@ -116,57 +110,40 @@ struct EmulatorView: View {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Menu {
                         Menu("Settings") {
-                            Toggle(isOn: $isAutoSprintEnabled) {
-                                Label("Auto Sprint", systemImage: "hare.fill")
-                            }
-                            .onChange(of: isAutoSprintEnabled) { enabled in
-                                handleAutoSprintToggle(enabled: enabled)
-                            }
-                            Toggle(isOn: $isHapticFeedbackEnabled) {
-                                Label("Haptic Feedback", systemImage: "waveform.path.ecg")
-                            }
+                            Toggle(isOn: $isAutoSprintEnabled) { Label("Auto Sprint", systemImage: "hare.fill") }
+                                .onChange(of: isAutoSprintEnabled) { enabled in handleAutoSprintToggle(enabled: enabled) }
+                            Toggle(isOn: $isHapticFeedbackEnabled) { Label("Haptic Feedback", systemImage: "waveform.path.ecg") }
                         }
                         Menu("Layout") {
                             Button {
                                 isEditingLayout.toggle()
-                                if !isEditingLayout {
-                                    saveCurrentOrientationLayout()
-                                }
-                            } label: {
-                                Label("Customize Layout", systemImage: "rectangle.and.pencil.and.ellipsis")
-                            }
+                                if !isEditingLayout { saveCurrentOrientationLayout() }
+                            } label: { Label("Customize Layout", systemImage: "rectangle.and.pencil.and.ellipsis") }
                             Button {
                                 resetToDefaultLayoutCurrent()
                                 saveCurrentOrientationLayout()
-                            } label: {
-                                Label("Reset Layout (Current)", systemImage: "arrow.clockwise")
-                            }
+                            } label: { Label("Reset Layout (Current)", systemImage: "arrow.clockwise") }
                         }
                         Menu("Skins") {
                             Button {
                                 showingPhotoPickerLandscape = true
-                            } label: {
-                                Label("Import Skin (Landscape)", systemImage: "iphone.gen3.landscape")
-                            }
+                            } label: { Label("Import Skin (Landscape)", systemImage: "iphone.gen3.landscape") }
                             Button {
                                 showingPhotoPickerPortrait = true
-                            } label: {
-                                Label("Import Skin (Portrait)", systemImage: "iphone.gen3")
-                            }
+                            } label: { Label("Import Skin (Portrait)", systemImage: "iphone.gen3") }
+                            Button {
+                                resetSkinsToDefaults()
+                            } label: { Label("Reset Skins to Defaults", systemImage: "arrow.clockwise") }
                         }
                         Menu("Other") {
                             Button {
                                 isCreditsPresented.toggle()
-                            } label: {
-                                Label("Credits", systemImage: "info.circle")
-                            }
+                            } label: { Label("Credits", systemImage: "info.circle") }
                         }
                         Section {
                             Button(role: .destructive) {
                                 showQuitConfirmation = true
-                            } label: {
-                                Label("Quit", systemImage: "xmark.circle")
-                            }
+                            } label: { Label("Quit", systemImage: "xmark.circle") }
                         }
                     } label: {
                         Label("Menu", systemImage: "ellipsis.circle")
@@ -194,9 +171,7 @@ struct EmulatorView: View {
                 photoLibrary: .shared()
             )
             .onChange(of: selectedPhotoLandscape) { newItem in
-                Task {
-                    await loadImageData(from: newItem, isLandscape: true)
-                }
+                Task { await loadImageData(from: newItem, isLandscape: true) }
             }
             .photosPicker(
                 isPresented: $showingPhotoPickerPortrait,
@@ -205,9 +180,7 @@ struct EmulatorView: View {
                 photoLibrary: .shared()
             )
             .onChange(of: selectedPhotoPortrait) { newItem in
-                Task {
-                    await loadImageData(from: newItem, isLandscape: false)
-                }
+                Task { await loadImageData(from: newItem, isLandscape: false) }
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -310,6 +283,12 @@ struct EmulatorView: View {
     private func loadPNG(key: String) -> Data? {
         UserDefaults.standard.data(forKey: key)
     }
+    private func resetSkinsToDefaults() {
+        UserDefaults.standard.removeObject(forKey: "importedPNGLandscape")
+        UserDefaults.standard.removeObject(forKey: "importedPNGPortrait")
+        importedPNGDataLandscape = nil
+        importedPNGDataPortrait = nil
+    }
     private func setupPhysicalController() {
         NotificationCenter.default.addObserver(forName: .GCControllerDidConnect, object: nil, queue: .main) { _ in
             configurePhysicalControllers()
@@ -403,7 +382,7 @@ struct EmulatorView: View {
         case 82: return ("KeyR", "r")
         case 83: return ("KeyS", "s")
         default: return ("", "")
-    }
+        }
     }
     private func sendKeyPress(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool) {
         guard let webView = webView else { return }
@@ -454,12 +433,14 @@ struct EmulatorView: View {
     private func handleAutoSprintToggle(enabled: Bool) {
         guard let w = webViewModel.webView else { return }
         if enabled {
-            autoSprintCancellable = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect().sink { _ in
-                if !activePresses.contains(66) {
-                    activePresses.insert(66)
-                    sendKeyPress(keyCode: 66, webView: w, shouldProvideHaptic: false)
+            autoSprintCancellable = Timer.publish(every: 0.1, on: .main, in: .common)
+                .autoconnect()
+                .sink { _ in
+                    if !activePresses.contains(66) {
+                        activePresses.insert(66)
+                        sendKeyPress(keyCode: 66, webView: w, shouldProvideHaptic: false)
+                    }
                 }
-            }
         } else {
             autoSprintCancellable?.cancel()
             if activePresses.contains(66) {
@@ -523,9 +504,7 @@ struct CreditsView: View {
                         }
                     }
                 }
-                Button(action: {
-                    dismiss()
-                }) {
+                Button(action: { dismiss() }) {
                     Text("Close").font(.body).foregroundColor(.blue).padding()
                 }
             }
@@ -634,21 +613,15 @@ struct DraggableButtonAreaView: View {
         .gesture(
             isEditing
             ? DragGesture()
-                .onChanged { v in
-                    dragOffset = v.translation
-                }
+                .onChanged { v in dragOffset = v.translation }
                 .onEnded { v in
                     button.x = min(max(button.x + v.translation.width, button.width / 2), screenSize.width - button.width / 2)
                     button.y = min(max(button.y + v.translation.height, button.height / 2), screenSize.height - button.height / 2)
                     dragOffset = .zero
                 }
             : DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    pressHandler(button.keyCode)
-                }
-                .onEnded { _ in
-                    releaseHandler(button.keyCode)
-                }
+                .onChanged { _ in pressHandler(button.keyCode) }
+                .onEnded { _ in releaseHandler(button.keyCode) }
         )
         .onAppear {
             currentWidth = button.width
@@ -663,6 +636,7 @@ struct PNGOverlay: View {
     let isEditing: Bool
     @Binding var buttons: [CustomButton]
     let importedPNGData: Data?
+    let isPortrait: Bool
     var body: some View {
         GeometryReader { g in
             let s = g.size
@@ -673,11 +647,27 @@ struct PNGOverlay: View {
                         .scaledToFit()
                         .frame(width: s.width, height: s.height)
                 } else {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.5))
-                        .frame(width: s.width, height: s.height)
-                    Text("No Skin Imported")
-                        .foregroundColor(.white)
+                    if isPortrait {
+                        if let defaultVertical = UIImage(named: "StikNES_Vertical") {
+                            Image(uiImage: defaultVertical)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: s.width, height: s.height)
+                        } else {
+                            Rectangle().fill(Color.gray.opacity(0.5))
+                            Text("No Skin Imported").foregroundColor(.white)
+                        }
+                    } else {
+                        if let defaultHorizontal = UIImage(named: "StikNES_Horizontal") {
+                            Image(uiImage: defaultHorizontal)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: s.width, height: s.height)
+                        } else {
+                            Rectangle().fill(Color.gray.opacity(0.5))
+                            Text("No Skin Imported").foregroundColor(.white)
+                        }
+                    }
                 }
                 ForEach($buttons) { $btn in
                     DraggableButtonAreaView(
