@@ -50,7 +50,7 @@ struct ContentView: View {
                                     }
                                 )
                                 .onTapGesture {
-                                    selectedGame = game
+                                    launchGame(game)
                                 }
                             }
                         }
@@ -109,6 +109,14 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func launchGame(_ game: Game) {
+        selectedGame = game
+
+        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+            appDelegate.restartServer()
         }
     }
 
