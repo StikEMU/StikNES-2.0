@@ -58,7 +58,7 @@ struct ContentView: View {
                                     }
                                 )
                                 .onTapGesture {
-                                    handleGameSelection(game)
+                                    selectedGame = game
                                 }
                             }
                         }
@@ -124,13 +124,6 @@ struct ContentView: View {
                     }
                 }
             }
-        }
-    }
-
-    private func handleGameSelection(_ game: Game) {
-        selectedGame = game
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            appDelegate.restartServer()
         }
     }
 
