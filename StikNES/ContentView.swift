@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Game: Identifiable, Hashable, Codable {
     let id: UUID
-    let name: String
+    var name: String
     var imageData: Data?
 
     init(id: UUID = UUID(), name: String, imageData: Data? = nil) {
@@ -25,6 +25,9 @@ struct ContentView: View {
     @State private var selectedGame: Game?
     @State private var showImagePicker = false
     @State private var gamePendingImage: Game?
+    @State private var gameToRename: Game?
+    @State private var showRenameAlert = false
+    @State private var newGameName = ""
 
     private let columns = [
         GridItem(.adaptive(minimum: 140), spacing: 20)
@@ -44,6 +47,11 @@ struct ContentView: View {
                                     onLongPressSetPhoto: {
                                         gamePendingImage = game
                                         showImagePicker = true
+                                    },
+                                    onRename: {
+                                        gameToRename = game
+                                        newGameName = (game.name as NSString).deletingPathExtension
+                                        showRenameAlert = true
                                     },
                                     onDelete: {
                                         deleteGame(game)
@@ -95,6 +103,13 @@ struct ContentView: View {
                     .accessibilityLabel("Import a new game")
                 }
             }
+            .alert("Rename Game", isPresented: $showRenameAlert) {
+                TextField("Enter new name", text: $newGameName)
+                Button("Cancel", role: .cancel) {}
+                Button("Rename") {
+                    renameGame(game: gameToRename, newName: newGameName)
+                }
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .sheet(isPresented: $showImagePicker) {
@@ -121,15 +136,15 @@ struct ContentView: View {
             guard selectedFile.startAccessingSecurityScopedResource() else { return }
             defer { selectedFile.stopAccessingSecurityScopedResource() }
 
-            let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
-            let destinationURL = emulatorPath.appendingPathComponent(selectedFile.lastPathComponent)
+            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let subDirectory = documentsDirectory.appendingPathComponent("ImportedGames")
 
             let fileManager = FileManager.default
-            if !fileManager.fileExists(atPath: emulatorPath.path) {
-                try fileManager.createDirectory(at: emulatorPath, withIntermediateDirectories: true)
+            if !fileManager.fileExists(atPath: subDirectory.path) {
+                try fileManager.createDirectory(at: subDirectory, withIntermediateDirectories: true)
             }
 
+            let destinationURL = subDirectory.appendingPathComponent(selectedFile.lastPathComponent)
             if fileManager.fileExists(atPath: destinationURL.path) {
                 try fileManager.removeItem(at: destinationURL)
             }
@@ -148,6 +163,14 @@ struct ContentView: View {
             importedGames.remove(at: index)
             saveImportedGames()
         }
+    }
+
+    private func renameGame(game: Game?, newName: String) {
+        guard let game = game, let index = importedGames.firstIndex(where: { $0.id == game.id }) else { return }
+        let fileExtension = (game.name as NSString).pathExtension
+        let updatedName = newName.isEmpty ? game.name : "\(newName).\(fileExtension)"
+        importedGames[index].name = updatedName
+        saveImportedGames()
     }
 
     private func saveImportedGames() {
@@ -172,6 +195,7 @@ struct ContentView: View {
 struct GameCardView: View {
     let game: Game
     let onLongPressSetPhoto: () -> Void
+    let onRename: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -204,6 +228,12 @@ struct GameCardView: View {
                 onLongPressSetPhoto()
             } label: {
                 Label("Set Photo", systemImage: "photo")
+            }
+
+            Button {
+                onRename()
+            } label: {
+                Label("Rename Game", systemImage: "pencil")
             }
 
             Button(role: .destructive) {
