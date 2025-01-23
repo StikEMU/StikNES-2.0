@@ -117,8 +117,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func restartServer() {
         server?.stop()
         print("Server stopped. Restarting...")
+        server = HttpServer()
         setupServer()
     }
+
 
     func applicationWillTerminate(_ application: UIApplication) {
         server?.stop()
