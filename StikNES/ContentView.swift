@@ -35,30 +35,48 @@ struct ContentView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    ScrollView {
-                        LazyVGrid(columns: columns, spacing: 20) {
-                            ForEach(importedGames) { game in
-                                GameCardView(
-                                    game: game,
-                                    onLongPressSetPhoto: {
-                                        gamePendingImage = game
-                                        showImagePicker = true
-                                    },
-                                    onDelete: {
-                                        deleteGame(game)
+                if importedGames.isEmpty {
+                    VStack(spacing: 8) {
+                        Text("No games have been imported yet.")
+                            .foregroundColor(.white)
+                            .font(.title3)
+                            .padding(.bottom, 8)
+                        
+                        Text("""
+After you import and launch your first game, please open the menu, navigate to Layout, and select Customize Layout. This step is necessary to ensure the emulator functions properly.
+""")
+                            .foregroundColor(.white.opacity(0.8))
+                            .font(.callout)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                } else {
+                    VStack(spacing: 0) {
+                        ScrollView {
+                            LazyVGrid(columns: columns, spacing: 20) {
+                                ForEach(importedGames) { game in
+                                    GameCardView(
+                                        game: game,
+                                        onLongPressSetPhoto: {
+                                            gamePendingImage = game
+                                            showImagePicker = true
+                                        },
+                                        onDelete: {
+                                            deleteGame(game)
+                                        }
+                                    )
+                                    .onTapGesture {
+                                        launchGame(game)
                                     }
-                                )
-                                .onTapGesture {
-                                    launchGame(game)
                                 }
                             }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                        .scrollIndicators(.hidden)
+                        Spacer()
                     }
-                    .scrollIndicators(.hidden)
-                    Spacer()
                 }
 
                 if let selectedGame = selectedGame {
@@ -115,7 +133,6 @@ struct ContentView: View {
 
     private func launchGame(_ game: Game) {
         selectedGame = game
-
         if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
             appDelegate.restartServer()
         }
