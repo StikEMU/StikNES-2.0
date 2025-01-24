@@ -29,15 +29,15 @@ struct EmulatorView: View {
     @State private var selectedPhotoLandscape: PhotosPickerItem?
     @State private var selectedPhotoPortrait: PhotosPickerItem?
     @State private var customButtonsPortrait: [CustomButton] = [
-        CustomButton(label: "Up", keyCode: 38, x: 80, y: 80, width: 60, height: 60),
-        CustomButton(label: "Down", keyCode: 40, x: 80, y: 200, width: 60, height: 60),
-        CustomButton(label: "Left", keyCode: 37, x: 20, y: 140, width: 60, height: 60),
-        CustomButton(label: "Right", keyCode: 39, x: 140, y: 140, width: 60, height: 60),
-        CustomButton(label: "A", keyCode: 65, x: 240, y: 140, width: 60, height: 60),
-        CustomButton(label: "B", keyCode: 66, x: 300, y: 140, width: 60, height: 60),
-        CustomButton(label: "Start", keyCode: 32, x: 200, y: 250, width: 60, height: 60),
-        CustomButton(label: "Select", keyCode: 83, x: 280, y: 250, width: 60, height: 60),
-        CustomButton(label: "Reset", keyCode: 82, x: 360, y: 250, width: 60, height: 60)
+        CustomButton(label: "Up", keyCode: 38, x: 88, y: 103, width: 60, height: 60),
+        CustomButton(label: "Down", keyCode: 40, x: 88, y: 209, width: 60, height: 60),
+        CustomButton(label: "Left", keyCode: 37, x: 20, y: 159, width: 60, height: 60),
+        CustomButton(label: "Right", keyCode: 39, x: 140, y: 159, width: 60, height: 60),
+        CustomButton(label: "A", keyCode: 65, x: 333, y: 128, width: 60, height: 60),
+        CustomButton(label: "B", keyCode: 66, x: 255, y: 199, width: 60, height: 60),
+        CustomButton(label: "Start", keyCode: 32, x: 230, y: 265, width: 60, height: 60),
+        CustomButton(label: "Select", keyCode: 83, x: 150, y: 265, width: 60, height: 60),
+        CustomButton(label: "Reset", keyCode: 82, x: 20, y: 265, width: 60, height: 60)
     ]
     @State private var customButtonsLandscape: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: 100, y: 40, width: 60, height: 60),
