@@ -115,6 +115,7 @@ After you import and launch your first game, please open the menu, navigate to L
                 }
             }
         }
+        .preferredColorScheme(.dark)
         .navigationViewStyle(StackNavigationViewStyle())
         .sheet(isPresented: $showImagePicker) {
             ImagePicker { uiImage in
