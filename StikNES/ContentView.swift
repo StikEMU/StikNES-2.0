@@ -32,6 +32,8 @@ struct ContentView: View {
     @State private var showImagePicker = false
     @State private var gamePendingImage: Game?
     @State private var searchText = ""
+    @State private var showSkinManager = false
+    @State private var showHelpSection = false
 
     private let columns = [
         GridItem(.adaptive(minimum: 160), spacing: 16)
@@ -46,7 +48,6 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Solid black background
                 Color.black
                     .ignoresSafeArea()
 
@@ -126,7 +127,35 @@ After you import and launch your first game, please open the menu, navigate to L
             .onAppear(perform: loadImportedGames)
             .navigationTitle("StikNES")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showSkinManager = true
+                    }) {
+                        Label("Skin Manager", systemImage: "paintbrush")
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                    }
+                    .sheet(isPresented: $showSkinManager) {
+                        Text("Skin Manager")
+                            .font(.largeTitle)
+                            .padding()
+                    }
+
+                    Button(action: {
+                        showHelpSection = true
+                    }) {
+                        Label("Help", systemImage: "questionmark.circle")
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                    }
+                    .sheet(isPresented: $showHelpSection) {
+                        Text("Help Section")
+                            .font(.largeTitle)
+                            .padding()
+                    }
+
                     Button(action: {
                         showFileImporter = true
                     }) {
@@ -234,7 +263,7 @@ struct GameCardView: View {
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.2)) // Distinguishable dark gray tone
+                        .fill(Color.gray.opacity(0.2))
                         .frame(height: 120)
                     Image(systemName: "gamecontroller")
                         .font(.system(size: 40))
@@ -251,9 +280,9 @@ struct GameCardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.gray.opacity(0.2)) // Matching card background
+                .fill(Color.gray.opacity(0.2))
         )
-        .shadow(color: Color.black.opacity(0.4), radius: 4, x: 0, y: 2) // Subtle shadow
+        .shadow(color: Color.black.opacity(0.4), radius: 4, x: 0, y: 2)
         .contextMenu {
             Button {
                 onLongPressSetPhoto()
