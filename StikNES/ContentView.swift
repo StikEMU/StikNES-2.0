@@ -11,11 +11,17 @@ struct Game: Identifiable, Hashable, Codable {
     let id: UUID
     let name: String
     var imageData: Data?
+    var developer: String?
+    var releaseYear: String?
+    var description: String?
 
-    init(id: UUID = UUID(), name: String, imageData: Data? = nil) {
+    init(id: UUID = UUID(), name: String, imageData: Data? = nil, developer: String? = nil, releaseYear: String? = nil, description: String? = nil) {
         self.id = id
         self.name = name
         self.imageData = imageData
+        self.developer = developer
+        self.releaseYear = releaseYear
+        self.description = description
     }
 }
 
@@ -25,37 +31,57 @@ struct ContentView: View {
     @State private var selectedGame: Game?
     @State private var showImagePicker = false
     @State private var gamePendingImage: Game?
+    @State private var searchText = ""
 
     private let columns = [
-        GridItem(.adaptive(minimum: 140), spacing: 20)
+        GridItem(.adaptive(minimum: 160), spacing: 16)
     ]
+
+    var filteredGames: [Game] {
+        importedGames.filter { game in
+            searchText.isEmpty || game.name.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
+                // Solid black background
+                Color.black
+                    .ignoresSafeArea()
 
                 if importedGames.isEmpty {
-                    VStack(spacing: 8) {
-                        Text("No games have been imported yet.")
+                    VStack(spacing: 16) {
+                        Image(systemName: "gamecontroller")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                            .foregroundColor(.blue.opacity(0.8))
+
+                        Text("No Games Imported")
+                            .font(.title2)
+                            .fontWeight(.semibold)
                             .foregroundColor(.white)
-                            .font(.title3)
-                            .padding(.bottom, 8)
-                        
-                        Text("""
+
+                        VStack(spacing: 8) {
+                            Text("Tap the + button to import your games.")
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+
+                            Text("""
 After you import and launch your first game, please open the menu, navigate to Layout, and select Customize Layout. This step is necessary to ensure the emulator functions properly.
 """)
-                            .foregroundColor(.white.opacity(0.8))
-                            .font(.callout)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 20)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+                        }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 } else {
                     VStack(spacing: 0) {
                         ScrollView {
-                            LazyVGrid(columns: columns, spacing: 20) {
-                                ForEach(importedGames) { game in
+                            LazyVGrid(columns: columns, spacing: 16) {
+                                ForEach(filteredGames) { game in
                                     GameCardView(
                                         game: game,
                                         onLongPressSetPhoto: {
@@ -71,11 +97,10 @@ After you import and launch your first game, please open the menu, navigate to L
                                     }
                                 }
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 20)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
                         }
-                        .scrollIndicators(.hidden)
-                        Spacer()
+                        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
                     }
                 }
 
@@ -100,18 +125,16 @@ After you import and launch your first game, please open the menu, navigate to L
             }
             .onAppear(perform: loadImportedGames)
             .navigationTitle("StikNES")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         showFileImporter = true
                     }) {
-                        Image(systemName: "plus.circle.fill")
+                        Label("Import Game", systemImage: "plus.circle.fill")
+                            .labelStyle(.iconOnly)
                             .font(.system(size: 24))
                             .foregroundColor(.blue)
-                            .shadow(radius: 2)
                     }
-                    .accessibilityLabel("Import a new game")
                 }
             }
         }
@@ -134,9 +157,6 @@ After you import and launch your first game, please open the menu, navigate to L
 
     private func launchGame(_ game: Game) {
         selectedGame = game
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            appDelegate.restartServer()
-        }
     }
 
     private func handleFileImport(result: Result<[URL], Error>) {
@@ -207,25 +227,33 @@ struct GameCardView: View {
                let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
-                    .scaledToFit()
-                    .frame(height: 80)
+                    .scaledToFill()
+                    .frame(height: 120)
+                    .clipped()
+                    .cornerRadius(12)
             } else {
-                Image(systemName: "gamecontroller")
-                    .font(.system(size: 40))
-                    .foregroundColor(.white)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.2)) // Distinguishable dark gray tone
+                        .frame(height: 120)
+                    Image(systemName: "gamecontroller")
+                        .font(.system(size: 40))
+                        .foregroundColor(.white)
+                }
             }
 
             Text((game.name as NSString).deletingPathExtension)
                 .font(.headline)
                 .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
-        .frame(maxWidth: .infinity, minHeight: 140)
         .padding()
-        .background(Color.gray.opacity(0.2))
-        .cornerRadius(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.gray.opacity(0.2)) // Matching card background
+        )
+        .shadow(color: Color.black.opacity(0.4), radius: 4, x: 0, y: 2) // Subtle shadow
         .contextMenu {
             Button {
                 onLongPressSetPhoto()
