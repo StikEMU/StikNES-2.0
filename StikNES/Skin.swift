@@ -29,52 +29,69 @@ struct SkinManagerView: View {
     @State private var skins: [Skin] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showDownloadAlert = false
+    @State private var downloadedSkinName: String = ""
     
     var body: some View {
         NavigationView {
-            ZStack {
-                if isLoading {
-                    ProgressView("Loading...")
-                        .scaleEffect(1.5)
-                } else if let errorMessage = errorMessage {
-                    VStack(spacing: 16) {
-                        Text("Oops!")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        Text(errorMessage)
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
-                        Button("Retry") {
-                            refreshData()
+            VStack {
+                ZStack {
+                    if isLoading {
+                        ProgressView("Loading...")
+                            .scaleEffect(1.5)
+                    } else if let errorMessage = errorMessage {
+                        VStack(spacing: 16) {
+                            Text("Oops!")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            Text(errorMessage)
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.secondary)
+                            Button("Retry") {
+                                refreshData()
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
-                        .buttonStyle(.borderedProminent)
+                    } else {
+                        ScrollView {
+                            LazyVStack(spacing: 20) {
+                                ForEach(skins) { skin in
+                                    SkinCardView(
+                                        skin: skin,
+                                        onDownloadAndSave: { downloadAndSaveSkin(skin) }
+                                    )
+                                    .padding(.horizontal)
+                                }
+                            }
+                            .padding(.top, 20)
+                        }
                     }
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 20) {
-                            ForEach(skins) { skin in
-                                SkinCardView(
-                                    skin: skin,
-                                    onDownloadAndSave: { downloadAndSaveSkin(skin) }
-                                )
-                                .padding(.horizontal)
+                }
+                
+                VStack {
+                    Divider()
+                    Text("For any skin takedown requests or to have a skin added, please open an issue on our [GitHub repository](https://github.com/StikEMU/StikNES-Site/issues).")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                        .onTapGesture {
+                            if let url = URL(string: "https://github.com/StikEMU/StikNES-Site/issues") {
+                                UIApplication.shared.open(url)
                             }
                         }
-                        .padding(.top, 20)
-                    }
                 }
             }
             .navigationTitle("Skins")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: refreshData) {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-            }
             .onAppear(perform: refreshData)
+            .alert("Downloaded!", isPresented: $showDownloadAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("\(downloadedSkinName) has been saved to Photos.")
+            }
         }
+        .scrollIndicators(.hidden)
     }
     
     private func fetchSkins() {
@@ -134,6 +151,8 @@ struct SkinManagerView: View {
                 } completionHandler: { success, error in
                     DispatchQueue.main.async {
                         if success {
+                            downloadedSkinName = skin.name
+                            showDownloadAlert = true
                             print("Skin saved to Photos successfully!")
                         } else {
                             print("Failed to save to Photos: \(error?.localizedDescription ?? "Unknown error")")
