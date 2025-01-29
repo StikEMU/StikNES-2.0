@@ -146,7 +146,7 @@ struct EmulatorView: View {
                             } label: { Label("Quit", systemImage: "xmark.circle") }
                         }
                     } label: {
-                        Label("Menu", systemImage: "ellipsis.circle")
+                        Label("Menu", systemImage: "ellipsis.circle.fill")
                             .font(.system(size: 22, weight: .bold))
                     }
                 }

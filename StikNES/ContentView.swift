@@ -131,29 +131,24 @@ After you import and launch your first game, please open the menu, navigate to L
                     Button(action: {
                         showSkinManager = true
                     }) {
-                        Label("Skin Manager", systemImage: "paintbrush")
+                        Label("Skin Manager", systemImage: "paintbrush.fill")
                             .labelStyle(.iconOnly)
                             .font(.system(size: 24))
                             .foregroundColor(.blue)
                     }
                     .sheet(isPresented: $showSkinManager) {
-                        Text("Skin Manager")
-                            .font(.largeTitle)
-                            .padding()
+                        SkinManagerView()
                     }
 
                     Button(action: {
-                        showHelpSection = true
+                        if let url = URL(string: "https://stiknes.com") {
+                            UIApplication.shared.open(url)
+                        }
                     }) {
-                        Label("Help", systemImage: "questionmark.circle")
+                        Label("Help", systemImage: "questionmark.circle.fill")
                             .labelStyle(.iconOnly)
                             .font(.system(size: 24))
                             .foregroundColor(.blue)
-                    }
-                    .sheet(isPresented: $showHelpSection) {
-                        Text("Help Section")
-                            .font(.largeTitle)
-                            .padding()
                     }
 
                     Button(action: {
