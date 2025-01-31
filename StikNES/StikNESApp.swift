@@ -11,6 +11,7 @@ import SwiftUI
 struct StikNESApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appStatusChecker = AppStatusChecker()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -32,6 +33,11 @@ struct StikNESApp: App {
             .animation(.easeInOut, value: appStatusChecker.isLoading)
             .onAppear {
                 appStatusChecker.checkAppStatus()
+            }
+            .onChange(of: scenePhase) { newPhase in
+                if newPhase == .active {
+                    appStatusChecker.checkAppStatus() // Re-check when app becomes active
+                }
             }
             .preferredColorScheme(.dark)
         }
