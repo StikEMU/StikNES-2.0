@@ -6,14 +6,13 @@
 //
 
 import UIKit
-import Swifter
+import Vapor
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    
     var window: UIWindow?
-    var server: HttpServer?
+    var app: Application?
     var emulatorDirectory: URL?
-    
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -22,7 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setupServer()
         return true
     }
-    
+
     func setupEmulatorFiles() {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
         let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
@@ -30,20 +29,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let fileManager = FileManager.default
         if !fileManager.fileExists(atPath: emulatorPath.path) {
             do {
-                try fileManager.createDirectory(at: emulatorPath,
-                                                withIntermediateDirectories: true,
-                                                attributes: nil)
+                try fileManager.createDirectory(at: emulatorPath, withIntermediateDirectories: true, attributes: nil)
             } catch {
                 print("Failed to create emulator directory: \(error)")
                 return
             }
         }
 
-        let emulatorFiles = [
-            "index.html",
-            "nes_rust_wasm.js",
-            "nes_rust_wasm_bg.wasm"
-        ]
+        let emulatorFiles = ["index.html", "nes_rust_wasm.js", "nes_rust_wasm_bg.wasm"]
 
         for fileName in emulatorFiles {
             guard let bundleURL = Bundle.main.url(forResource: fileName, withExtension: nil) else {
@@ -65,69 +58,59 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.emulatorDirectory = emulatorPath
         print("Emulator files copied to \(emulatorPath.path)")
     }
-    
+
     func setupServer() {
         guard let emulatorDirectory = emulatorDirectory else {
             print("Emulator directory not set up")
             return
         }
 
-        server = HttpServer()
-        
-        if let server = server {
-            server.middleware.append { request in
-                if request.address != "127.0.0.1" {
-                    let rejectionMessage = """
-                    -------------------------------------------------------------------
-                    Access Denied!
-                    -------------------------------------------------------------------
-                    Hey there, sneaky!
-                    This server is a private party, and you're not on the guest list.
-                    -------------------------------------------------------------------
-                    It's probably just a skill issue.
-                    -------------------------------------------------------------------
-                    """
-                    print("Rejected connection from: \(request.address ?? "Unknown Address")")
-                    return HttpResponse.raw(403,
-                                            "Forbidden",
-                                            ["Content-Type": "text/plain"]) { writer in
-                        try writer.write(rejectionMessage.data(using: .utf8) ?? Data())
-                    }
-                }
-                return nil
-            }
-            
-            server["/"] = { _ in
+        do {
+            var env = try Environment.detect()
+            try LoggingSystem.bootstrap(from: &env)
+
+            app = Application(env)
+            guard let app = app else { return }
+
+            app.middleware.use(IPRestrictionMiddleware())
+
+            app.middleware.use(FileMiddleware(publicDirectory: emulatorDirectory.path))
+
+            app.get { req in
                 let indexPath = emulatorDirectory.appendingPathComponent("index.html").path
                 do {
                     let html = try String(contentsOfFile: indexPath)
-                    let headers = [
-                        "Content-Type": "text/html; charset=utf-8",
-                        "Cache-Control": "no-store, no-cache, must-revalidate",
-                        "Pragma": "no-cache",
-                        "Expires": "0"
-                    ]
-                    return HttpResponse.raw(200, "OK", headers) { writer in
-                        try writer.write(html.data(using: .utf8)!)
-                    }
+                    return Response(status: .ok, headers: ["Content-Type": "text/html"], body: .init(string: html))
                 } catch {
-                    return HttpResponse.internalServerError
+                    return Response(status: .internalServerError)
                 }
             }
-            
-            server["/:path"] = shareFilesFromDirectory(emulatorDirectory.path)
-            
-            do {
-                try server.start(8080, forceIPv4: true)
-                print("Server started at http://127.0.0.1:8080")
-            } catch {
-                print("Failed to start server: \(error)")
+
+            app.get("/*") { req -> Response in
+                let filePath = emulatorDirectory.appendingPathComponent(req.url.path).path
+                if FileManager.default.fileExists(atPath: filePath) {
+                    return req.fileio.streamFile(at: filePath)
+                } else {
+                    return Response(status: .notFound, body: .init(string: "File not found"))
+                }
             }
+
+            DispatchQueue.global(qos: .background).async {
+                do {
+                    try app.run()
+                } catch {
+                    print("Failed to start server: \(error)")
+                }
+            }
+
+            print("Server started at http://127.0.0.1:8080")
+        } catch {
+            print("Failed to setup Vapor server: \(error)")
         }
     }
-    
+
     func restartServer() {
-        server?.stop()
+        app?.shutdown()
         print("Server stopped. Restarting...")
 
         if let emulatorDirectory = emulatorDirectory {
@@ -145,12 +128,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
 
-        server = HttpServer()
         setupServer()
     }
-    
+
     func applicationWillTerminate(_ application: UIApplication) {
-        server?.stop()
+        app?.shutdown()
         print("Server stopped.")
+    }
+}
+
+struct IPRestrictionMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        if request.remoteAddress?.ipAddress != "127.0.0.1" {
+            let rejectionMessage = """
+            -------------------------------------------------------------------
+            Access Denied!
+            -------------------------------------------------------------------
+            Hey there, sneaky!
+            This server is a private party, and you're not on the guest list.
+            -------------------------------------------------------------------
+            It's probably just a skill issue.
+            -------------------------------------------------------------------
+            """
+            print("Rejected connection from: \(request.remoteAddress?.ipAddress ?? "Unknown Address")")
+            return request.eventLoop.makeSucceededFuture(
+                Response(status: .forbidden, body: .init(string: rejectionMessage))
+            )
+        }
+        return next.respond(to: request)
     }
 }

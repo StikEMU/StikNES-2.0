@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = DCBB136B2D225BDA00A1721A /* Swifter */; };
+		DC2BF0C82D4EBE4A00296A55 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = DC2BF0C72D4EBE4A00296A55 /* Vapor */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,7 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DCBB136C2D225BDA00A1721A /* Swifter in Frameworks */,
+				DC2BF0C82D4EBE4A00296A55 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,7 +131,7 @@
 			);
 			name = StikNES;
 			packageProductDependencies = (
-				DCBB136B2D225BDA00A1721A /* Swifter */,
+				DC2BF0C72D4EBE4A00296A55 /* Vapor */,
 			);
 			productName = StikNES;
 			productReference = DCBB133D2D225B2400A1721A /* StikNES.app */;
@@ -213,7 +213,7 @@
 			mainGroup = DCBB13342D225B2400A1721A;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */,
+				DC2BF0C62D4EBE4A00296A55 /* XCRemoteSwiftPackageReference "vapor" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DCBB133E2D225B2400A1721A /* Products */;
@@ -586,21 +586,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */ = {
+		DC2BF0C62D4EBE4A00296A55 /* XCRemoteSwiftPackageReference "vapor" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/httpswift/swifter";
+			repositoryURL = "https://github.com/vapor/vapor";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.5.0;
+				minimumVersion = 4.112.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		DCBB136B2D225BDA00A1721A /* Swifter */ = {
+		DC2BF0C72D4EBE4A00296A55 /* Vapor */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = DCBB136A2D225BDA00A1721A /* XCRemoteSwiftPackageReference "swifter" */;
-			productName = Swifter;
+			package = DC2BF0C62D4EBE4A00296A55 /* XCRemoteSwiftPackageReference "vapor" */;
+			productName = Vapor;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

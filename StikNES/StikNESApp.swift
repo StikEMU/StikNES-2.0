@@ -21,7 +21,7 @@ struct StikNESApp: App {
                 
                 if appStatusChecker.isLoading {
                     LoadingView()
-                } else if appStatusChecker.isWifiConnected {
+                } else if appStatusChecker.isNetworkConnected {
                     if appStatusChecker.isAppAvailable {
                         ContentView()
                             .transition(.opacity)
@@ -32,7 +32,7 @@ struct StikNESApp: App {
                         }
                     }
                 } else {
-                    ErrorView(errorMessage: "Wi-Fi connection is required to use this app.") {
+                    ErrorView(errorMessage: "An internet connection (Wi-Fi or cellular) is required to use this app.") {
                         appStatusChecker.checkAppStatus()
                     }
                 }
@@ -105,23 +105,23 @@ struct ErrorView: View {
 class AppStatusChecker: ObservableObject {
     @Published var isAppAvailable: Bool = false
     @Published var isLoading: Bool = true
-    @Published var isWifiConnected: Bool = false
+    @Published var isNetworkConnected: Bool = false
     @Published var errorMessage: String?
 
-    private let url = URL(string: "https://stiknes.com/status.json")!
+    private let url = URL(string: "https://stiknes.com/status-beta.json")!
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue.global(qos: .background)
 
     init() {
         monitor.pathUpdateHandler = { path in
             DispatchQueue.main.async {
-                self.isWifiConnected = path.usesInterfaceType(.wifi)
-                if self.isWifiConnected {
+                self.isNetworkConnected = path.status == .satisfied
+                if self.isNetworkConnected {
                     self.checkAppStatus()
                 } else {
                     self.isLoading = false
                     self.isAppAvailable = false
-                    self.errorMessage = "Wi-Fi connection is required to use this app."
+                    self.errorMessage = "An internet connection (Wi-Fi or cellular) is required to use this app."
                 }
             }
         }
@@ -129,11 +129,11 @@ class AppStatusChecker: ObservableObject {
     }
 
     func checkAppStatus() {
-        guard isWifiConnected else {
+        guard isNetworkConnected else {
             DispatchQueue.main.async {
                 self.isLoading = false
                 self.isAppAvailable = false
-                self.errorMessage = "Wi-Fi connection is required to check the app status."
+                self.errorMessage = "An internet connection is required to check the app status."
             }
             return
         }
