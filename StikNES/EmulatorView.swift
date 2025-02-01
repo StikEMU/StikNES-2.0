@@ -14,28 +14,6 @@ import PhotosUI
 import UIKit
 import AVFoundation
 
-class AudioManager {
-    static let shared = AudioManager()
-    private var player: AVAudioPlayer?
-
-    func startSilentAudio() {
-        guard let url = Bundle.main.url(forResource: "silence", withExtension: "mp3") else {
-            print("Silent audio file not found.")
-            return
-        }
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-            player = try AVAudioPlayer(contentsOf: url)
-            player?.numberOfLoops = -1
-            player?.volume = 0.01
-            player?.play()
-        } catch {
-            print("Error starting silent audio: \(error)")
-        }
-    }
-}
-
 struct EmulatorView: View {
     let game: String
     @StateObject private var webViewModel = WebViewModel()
@@ -52,42 +30,15 @@ struct EmulatorView: View {
     @State private var selectedPhotoLandscape: PhotosPickerItem?
     @State private var selectedPhotoPortrait: PhotosPickerItem?
     @State private var customButtonsPortrait: [CustomButton] = [
-        CustomButton(label: "Up", keyCode: 38,
-                     x: UIScreen.main.bounds.width * 0.22,
-                     y: UIScreen.main.bounds.height * 0.12,
-                     width: 60, height: 60),
-        CustomButton(label: "Down", keyCode: 40,
-                     x: UIScreen.main.bounds.width * 0.22,
-                     y: UIScreen.main.bounds.height * 0.25,
-                     width: 60, height: 60),
-        CustomButton(label: "Left", keyCode: 37,
-                     x: UIScreen.main.bounds.width * 0.05,
-                     y: UIScreen.main.bounds.height * 0.185,
-                     width: 60, height: 60),
-        CustomButton(label: "Right", keyCode: 39,
-                     x: UIScreen.main.bounds.width * 0.39,
-                     y: UIScreen.main.bounds.height * 0.185,
-                     width: 60, height: 60),
-        CustomButton(label: "A", keyCode: 65,
-                     x: UIScreen.main.bounds.width * 0.85,
-                     y: UIScreen.main.bounds.height * 0.15,
-                     width: 60, height: 60),
-        CustomButton(label: "B", keyCode: 66,
-                     x: UIScreen.main.bounds.width * 0.65,
-                     y: UIScreen.main.bounds.height * 0.24,
-                     width: 60, height: 60),
-        CustomButton(label: "Start", keyCode: 32,
-                     x: UIScreen.main.bounds.width * 0.60,
-                     y: UIScreen.main.bounds.height * 0.32,
-                     width: 60, height: 60),
-        CustomButton(label: "Select", keyCode: 83,
-                     x: UIScreen.main.bounds.width * 0.40,
-                     y: UIScreen.main.bounds.height * 0.32,
-                     width: 60, height: 60),
-        CustomButton(label: "Reset", keyCode: 82,
-                     x: UIScreen.main.bounds.width * 0.05,
-                     y: UIScreen.main.bounds.height * 0.32,
-                     width: 60, height: 60)
+        CustomButton(label: "Up", keyCode: 38, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.12, width: 60, height: 60),
+        CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
+        CustomButton(label: "Left", keyCode: 37, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
+        CustomButton(label: "Right", keyCode: 39, x: UIScreen.main.bounds.width * 0.39, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
+        CustomButton(label: "A", keyCode: 65, x: UIScreen.main.bounds.width * 0.85, y: UIScreen.main.bounds.height * 0.15, width: 60, height: 60),
+        CustomButton(label: "B", keyCode: 66, x: UIScreen.main.bounds.width * 0.65, y: UIScreen.main.bounds.height * 0.24, width: 60, height: 60),
+        CustomButton(label: "Start", keyCode: 32, x: UIScreen.main.bounds.width * 0.60, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
+        CustomButton(label: "Select", keyCode: 83, x: UIScreen.main.bounds.width * 0.40, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
+        CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
     ]
     @State private var customButtonsLandscape: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: 100, y: 40, width: 60, height: 60),
@@ -115,31 +66,15 @@ struct EmulatorView: View {
                     let pngDataToUse = isPortrait ? importedPNGDataPortrait : importedPNGDataLandscape
                     if isPortrait {
                         VStack(spacing: 0) {
-                            nesWebView
+                            nesWebView.frame(width: geometry.size.width, height: geometry.size.height * 0.5)
+                            PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) }, releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) }, isEditing: isEditingLayout, buttons: displayedButtons, importedPNGData: pngDataToUse, isPortrait: true)
                                 .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
-                            PNGOverlay(
-                                pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
-                                releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
-                                isEditing: isEditingLayout,
-                                buttons: displayedButtons,
-                                importedPNGData: pngDataToUse,
-                                isPortrait: true
-                            )
-                            .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
                         }
                     } else {
                         ZStack {
-                            nesWebView
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                            PNGOverlay(
-                                pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
-                                releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
-                                isEditing: isEditingLayout,
-                                buttons: displayedButtons,
-                                importedPNGData: pngDataToUse,
-                                isPortrait: false
-                            )
-                            .edgesIgnoringSafeArea(.all)
+                            nesWebView.frame(width: geometry.size.width, height: geometry.size.height)
+                            PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) }, releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) }, isEditing: isEditingLayout, buttons: displayedButtons, importedPNGData: pngDataToUse, isPortrait: false)
+                                .edgesIgnoringSafeArea(.all)
                         }
                     }
                 }
@@ -153,16 +88,15 @@ struct EmulatorView: View {
                     importedPNGDataLandscape = loadPNG(key: "importedPNGLandscape")
                     importedPNGDataPortrait = loadPNG(key: "importedPNGPortrait")
                 }
-                AudioManager.shared.startSilentAudio()
             }
             .onDisappear {
                 stopListeningForPhysicalControllers()
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
-                webViewModel.webView?.evaluateJavaScript("if (window.pauseEmulator) { window.pauseEmulator(); }")
+                webViewModel.webView.evaluateJavaScript("if (window.pauseEmulator) { window.pauseEmulator(); }")
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                webViewModel.webView?.evaluateJavaScript("if (window.resumeEmulator) { window.resumeEmulator(); }")
+                webViewModel.webView.evaluateJavaScript("if (window.resumeEmulator) { window.resumeEmulator(); }")
             }
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -212,31 +146,17 @@ struct EmulatorView: View {
             .sheet(isPresented: $isCreditsPresented) {
                 CreditsView()
             }
-            .confirmationDialog(
-                "Are you sure you want to quit?",
-                isPresented: $showQuitConfirmation,
-                titleVisibility: .visible
-            ) {
+            .confirmationDialog("Are you sure you want to quit?", isPresented: $showQuitConfirmation, titleVisibility: .visible) {
                 Button("Quit", role: .destructive) {
                     quitGame()
                 }
                 Button("Cancel", role: .cancel) {}
             }
-            .photosPicker(
-                isPresented: $showingPhotoPickerLandscape,
-                selection: $selectedPhotoLandscape,
-                matching: .images,
-                photoLibrary: .shared()
-            )
+            .photosPicker(isPresented: $showingPhotoPickerLandscape, selection: $selectedPhotoLandscape, matching: .images, photoLibrary: .shared())
             .onChange(of: selectedPhotoLandscape) { newItem in
                 Task { await loadImageData(from: newItem, isLandscape: true) }
             }
-            .photosPicker(
-                isPresented: $showingPhotoPickerPortrait,
-                selection: $selectedPhotoPortrait,
-                matching: .images,
-                photoLibrary: .shared()
-            )
+            .photosPicker(isPresented: $showingPhotoPickerPortrait, selection: $selectedPhotoPortrait, matching: .images, photoLibrary: .shared())
             .onChange(of: selectedPhotoPortrait) { newItem in
                 Task { await loadImageData(from: newItem, isLandscape: false) }
             }
@@ -244,19 +164,21 @@ struct EmulatorView: View {
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarBackButtonHidden(true)
     }
-        
+    
     private func onScreenPress(keyCode: Int) {
         if !activePresses.contains(keyCode) {
             activePresses.insert(keyCode)
             sendKeyPress(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
         }
     }
+    
     private func onScreenRelease(keyCode: Int) {
         if activePresses.contains(keyCode) {
             activePresses.remove(keyCode)
             sendKeyUp(keyCode: keyCode, webView: webViewModel.webView, shouldProvideHaptic: true)
         }
     }
+    
     private func loadImageData(from item: PhotosPickerItem?, isLandscape: Bool) async {
         guard let item = item else { return }
         do {
@@ -271,10 +193,12 @@ struct EmulatorView: View {
             }
         } catch {}
     }
+    
     private func saveAllButtonLayouts() {
         saveButtonArray(customButtonsPortrait, key: "buttonLayoutPortrait")
         saveButtonArray(customButtonsLandscape, key: "buttonLayoutLandscape")
     }
+    
     private func loadAllButtonLayouts() {
         if let loaded = loadButtonArray(key: "buttonLayoutPortrait") {
             customButtonsPortrait = loaded
@@ -283,6 +207,7 @@ struct EmulatorView: View {
             customButtonsLandscape = loaded
         }
     }
+    
     private func saveCurrentOrientationLayout() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first else { return }
@@ -294,6 +219,7 @@ struct EmulatorView: View {
             saveButtonArray(customButtonsLandscape, key: "buttonLayoutLandscape")
         }
     }
+    
     private func resetToDefaultLayoutCurrent() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first else { return }
@@ -301,42 +227,15 @@ struct EmulatorView: View {
         let isPortrait = size.height > size.width
         if isPortrait {
             customButtonsPortrait = [
-                CustomButton(label: "Up", keyCode: 38,
-                             x: UIScreen.main.bounds.width * 0.22,
-                             y: UIScreen.main.bounds.height * 0.12,
-                             width: 60, height: 60),
-                CustomButton(label: "Down", keyCode: 40,
-                             x: UIScreen.main.bounds.width * 0.22,
-                             y: UIScreen.main.bounds.height * 0.25,
-                             width: 60, height: 60),
-                CustomButton(label: "Left", keyCode: 37,
-                             x: UIScreen.main.bounds.width * 0.05,
-                             y: UIScreen.main.bounds.height * 0.185,
-                             width: 60, height: 60),
-                CustomButton(label: "Right", keyCode: 39,
-                             x: UIScreen.main.bounds.width * 0.39,
-                             y: UIScreen.main.bounds.height * 0.185,
-                             width: 60, height: 60),
-                CustomButton(label: "A", keyCode: 65,
-                             x: UIScreen.main.bounds.width * 0.85,
-                             y: UIScreen.main.bounds.height * 0.15,
-                             width: 60, height: 60),
-                CustomButton(label: "B", keyCode: 66,
-                             x: UIScreen.main.bounds.width * 0.65,
-                             y: UIScreen.main.bounds.height * 0.24,
-                             width: 60, height: 60),
-                CustomButton(label: "Start", keyCode: 32,
-                             x: UIScreen.main.bounds.width * 0.60,
-                             y: UIScreen.main.bounds.height * 0.32,
-                             width: 60, height: 60),
-                CustomButton(label: "Select", keyCode: 83,
-                             x: UIScreen.main.bounds.width * 0.40,
-                             y: UIScreen.main.bounds.height * 0.32,
-                             width: 60, height: 60),
-                CustomButton(label: "Reset", keyCode: 82,
-                             x: UIScreen.main.bounds.width * 0.05,
-                             y: UIScreen.main.bounds.height * 0.32,
-                             width: 60, height: 60)
+                CustomButton(label: "Up", keyCode: 38, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.12, width: 60, height: 60),
+                CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
+                CustomButton(label: "Left", keyCode: 37, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
+                CustomButton(label: "Right", keyCode: 39, x: UIScreen.main.bounds.width * 0.39, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
+                CustomButton(label: "A", keyCode: 65, x: UIScreen.main.bounds.width * 0.85, y: UIScreen.main.bounds.height * 0.15, width: 60, height: 60),
+                CustomButton(label: "B", keyCode: 66, x: UIScreen.main.bounds.width * 0.65, y: UIScreen.main.bounds.height * 0.24, width: 60, height: 60),
+                CustomButton(label: "Start", keyCode: 32, x: UIScreen.main.bounds.width * 0.60, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
+                CustomButton(label: "Select", keyCode: 83, x: UIScreen.main.bounds.width * 0.40, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
+                CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
             ]
         } else {
             customButtonsLandscape = [
@@ -352,23 +251,28 @@ struct EmulatorView: View {
             ]
         }
     }
+    
     private func saveButtonArray(_ array: [CustomButton], key: String) {
         let encoder = JSONEncoder()
         if let data = try? encoder.encode(array) {
             UserDefaults.standard.set(data, forKey: key)
         }
     }
+    
     private func loadButtonArray(key: String) -> [CustomButton]? {
         guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
         let decoder = JSONDecoder()
         return try? decoder.decode([CustomButton].self, from: data)
     }
+    
     private func savePNG(data: Data, key: String) {
         UserDefaults.standard.set(data, forKey: key)
     }
+    
     private func loadPNG(key: String) -> Data? {
         UserDefaults.standard.data(forKey: key)
     }
+    
     private func resetSkinsToDefaults() {
         UserDefaults.standard.removeObject(forKey: "importedPNGLandscape")
         UserDefaults.standard.removeObject(forKey: "importedPNGPortrait")
@@ -383,19 +287,22 @@ struct EmulatorView: View {
         NotificationCenter.default.addObserver(forName: .GCControllerDidDisconnect, object: nil, queue: .main) { _ in }
         configurePhysicalControllers()
     }
+    
     private func stopListeningForPhysicalControllers() {
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidConnect, object: nil)
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidDisconnect, object: nil)
     }
+    
     private func configurePhysicalControllers() {
         for controller in GCController.controllers() {
             guard let gamepad = controller.extendedGamepad else { continue }
             gamepad.valueChangedHandler = { gamepad, _ in
-                guard let webView = webViewModel.webView else { return }
+                let webView = webViewModel.webView
                 handleGamepadInput(gamepad, webView: webView)
             }
         }
     }
+    
     private func handleGamepadInput(_ gamepad: GCExtendedGamepad, webView: WKWebView) {
         handleDirectionPad(gamepad.dpad, webView: webView)
         let aKey = 65
@@ -425,6 +332,7 @@ struct EmulatorView: View {
             }
         }
     }
+    
     private func handleDirectionPad(_ dpad: GCControllerDirectionPad, webView: WKWebView) {
         checkDpad(dpad.up, 38, webView)
         checkDpad(dpad.down, 40, webView)
@@ -444,6 +352,7 @@ struct EmulatorView: View {
             }
         }
     }
+    
     private func checkDpad(_ pad: GCControllerButtonInput, _ code: Int, _ webView: WKWebView) {
         if pad.isPressed {
             if !activePresses.contains(code) {
@@ -457,6 +366,7 @@ struct EmulatorView: View {
             }
         }
     }
+    
     private func eventProperties(for keyCode: Int) -> (String, String) {
         switch keyCode {
         case 37: return ("ArrowLeft", "ArrowLeft")
@@ -471,8 +381,8 @@ struct EmulatorView: View {
         default: return ("", "")
         }
     }
-    private func sendKeyPress(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool) {
-        guard let webView = webView else { return }
+    
+    private func sendKeyPress(keyCode: Int, webView: WKWebView, shouldProvideHaptic: Bool) {
         if shouldProvideHaptic && isHapticFeedbackEnabled {
             let f = UIImpactFeedbackGenerator(style: .rigid)
             f.prepare()
@@ -494,8 +404,8 @@ struct EmulatorView: View {
         """
         webView.evaluateJavaScript(js, completionHandler: nil)
     }
-    private func sendKeyUp(keyCode: Int, webView: WKWebView?, shouldProvideHaptic: Bool) {
-        guard let webView = webView else { return }
+    
+    private func sendKeyUp(keyCode: Int, webView: WKWebView, shouldProvideHaptic: Bool) {
         if shouldProvideHaptic && isHapticFeedbackEnabled {
             let f = UIImpactFeedbackGenerator(style: .rigid)
             f.prepare()
@@ -517,8 +427,9 @@ struct EmulatorView: View {
         """
         webView.evaluateJavaScript(js, completionHandler: nil)
     }
+    
     private func handleAutoSprintToggle(enabled: Bool) {
-        guard let w = webViewModel.webView else { return }
+        let w = webViewModel.webView
         if enabled {
             autoSprintCancellable = Timer.publish(every: 0.1, on: .main, in: .common)
                 .autoconnect()
@@ -536,6 +447,7 @@ struct EmulatorView: View {
             }
         }
     }
+    
     private func quitGame() {
         dismiss()
     }
@@ -605,20 +517,17 @@ struct NESWebView: UIViewRepresentable {
     let game: String
     @ObservedObject var webViewModel: WebViewModel
     func makeUIView(context: Context) -> WKWebView {
-        if webViewModel.webView == nil {
-            let w = WKWebView()
-            webViewModel.webView = w
-            if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
-                w.load(URLRequest(url: url))
-            }
+        let w = webViewModel.webView
+        if w.url == nil, let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
+            w.load(URLRequest(url: url))
         }
-        return webViewModel.webView!
+        return w
     }
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
 
 class WebViewModel: ObservableObject {
-    @Published var webView: WKWebView?
+    @Published var webView: WKWebView = WKWebView()
 }
 
 struct CustomButton: Identifiable, Codable {
@@ -652,54 +561,33 @@ struct DraggableButtonAreaView: View {
     private let minButtonSize: CGFloat = 30
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            Color.clear
-                .frame(width: button.width, height: button.height)
-                .contentShape(Rectangle())
+            Color.clear.frame(width: button.width, height: button.height).contentShape(Rectangle())
             if isEditing {
-                Rectangle()
-                    .fill(Color.blue.opacity(0.3))
-                    .frame(width: button.width, height: button.height)
-                    .overlay(
-                        Text(button.label)
-                            .foregroundColor(.white)
-                            .font(.footnote)
-                            .padding(2)
-                            .background(Color.black.opacity(0.6))
-                            .cornerRadius(4),
-                        alignment: .center
-                    )
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 20, height: 20)
-                    .padding(2)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { v in
-                                let dw = v.translation.width
-                                let dh = v.translation.height
-                                let nw = max(minButtonSize, currentWidth + dw)
-                                let nh = max(minButtonSize, currentHeight + dh)
-                                if button.x + nw <= screenSize.width {
-                                    button.width = nw
-                                }
-                                if button.y + nh <= screenSize.height {
-                                    button.height = nh
-                                }
+                Rectangle().fill(Color.blue.opacity(0.3)).frame(width: button.width, height: button.height).overlay(Text(button.label).foregroundColor(.white).font(.footnote).padding(2).background(Color.black.opacity(0.6)).cornerRadius(4), alignment: .center)
+                Circle().fill(Color.white).frame(width: 20, height: 20).padding(2).gesture(
+                    DragGesture()
+                        .onChanged { v in
+                            let dw = v.translation.width
+                            let dh = v.translation.height
+                            let nw = max(minButtonSize, currentWidth + dw)
+                            let nh = max(minButtonSize, currentHeight + dh)
+                            if button.x + nw <= screenSize.width {
+                                button.width = nw
                             }
-                            .onEnded { _ in
-                                currentWidth = button.width
-                                currentHeight = button.height
+                            if button.y + nh <= screenSize.height {
+                                button.height = nh
                             }
-                    )
+                        }
+                        .onEnded { _ in
+                            currentWidth = button.width
+                            currentHeight = button.height
+                        }
+                )
             }
         }
-        .position(
-            x: min(max(button.x + dragOffset.width, button.width / 2), screenSize.width - button.width / 2),
-            y: min(max(button.y + dragOffset.height, button.height / 2), screenSize.height - button.height / 2)
-        )
+        .position(x: min(max(button.x + dragOffset.width, button.width / 2), screenSize.width - button.width / 2), y: min(max(button.y + dragOffset.height, button.height / 2), screenSize.height - button.height / 2))
         .gesture(
-            isEditing
-            ? DragGesture()
+            isEditing ? DragGesture()
                 .onChanged { v in dragOffset = v.translation }
                 .onEnded { v in
                     button.x = min(max(button.x + v.translation.width, button.width / 2), screenSize.width - button.width / 2)
@@ -729,27 +617,18 @@ struct PNGOverlay: View {
             let s = g.size
             ZStack {
                 if let d = importedPNGData, let img = UIImage(data: d) {
-                    Image(uiImage: img)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: s.width, height: s.height)
+                    Image(uiImage: img).resizable().scaledToFit().frame(width: s.width, height: s.height)
                 } else {
                     if isPortrait {
                         if let defaultVertical = UIImage(named: "StikNES_Vertical") {
-                            Image(uiImage: defaultVertical)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: s.width, height: s.height)
+                            Image(uiImage: defaultVertical).resizable().scaledToFit().frame(width: s.width, height: s.height)
                         } else {
                             Rectangle().fill(Color.gray.opacity(0.5))
                             Text("No Skin Imported").foregroundColor(.white)
                         }
                     } else {
                         if let defaultHorizontal = UIImage(named: "StikNES_Horizontal") {
-                            Image(uiImage: defaultHorizontal)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: s.width, height: s.height)
+                            Image(uiImage: defaultHorizontal).resizable().scaledToFit().frame(width: s.width, height: s.height)
                         } else {
                             Rectangle().fill(Color.gray.opacity(0.5))
                             Text("No Skin Imported").foregroundColor(.white)
@@ -757,13 +636,7 @@ struct PNGOverlay: View {
                     }
                 }
                 ForEach($buttons) { $btn in
-                    DraggableButtonAreaView(
-                        button: $btn,
-                        isEditing: isEditing,
-                        screenSize: s,
-                        pressHandler: pressHandler,
-                        releaseHandler: releaseHandler
-                    )
+                    DraggableButtonAreaView(button: $btn, isEditing: isEditing, screenSize: s, pressHandler: pressHandler, releaseHandler: releaseHandler)
                 }
             }
         }
