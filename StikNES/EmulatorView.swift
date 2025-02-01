@@ -12,6 +12,29 @@ import GameController
 import UniformTypeIdentifiers
 import PhotosUI
 import UIKit
+import AVFoundation
+
+class AudioManager {
+    static let shared = AudioManager()
+    private var player: AVAudioPlayer?
+
+    func startSilentAudio() {
+        guard let url = Bundle.main.url(forResource: "silence", withExtension: "mp3") else {
+            print("Silent audio file not found.")
+            return
+        }
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+            player = try AVAudioPlayer(contentsOf: url)
+            player?.numberOfLoops = -1
+            player?.volume = 0.01
+            player?.play()
+        } catch {
+            print("Error starting silent audio: \(error)")
+        }
+    }
+}
 
 struct EmulatorView: View {
     let game: String
@@ -30,43 +53,41 @@ struct EmulatorView: View {
     @State private var selectedPhotoPortrait: PhotosPickerItem?
     @State private var customButtonsPortrait: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38,
-                    x: UIScreen.main.bounds.width * 0.22,
-                    y: UIScreen.main.bounds.height * 0.12,
-                    width: 60, height: 60),
+                     x: UIScreen.main.bounds.width * 0.22,
+                     y: UIScreen.main.bounds.height * 0.12,
+                     width: 60, height: 60),
         CustomButton(label: "Down", keyCode: 40,
-                    x: UIScreen.main.bounds.width * 0.22,
-                    y: UIScreen.main.bounds.height * 0.25,
-                    width: 60, height: 60),
+                     x: UIScreen.main.bounds.width * 0.22,
+                     y: UIScreen.main.bounds.height * 0.25,
+                     width: 60, height: 60),
         CustomButton(label: "Left", keyCode: 37,
-                    x: UIScreen.main.bounds.width * 0.05,
-                    y: UIScreen.main.bounds.height * 0.185,
-                    width: 60, height: 60),
+                     x: UIScreen.main.bounds.width * 0.05,
+                     y: UIScreen.main.bounds.height * 0.185,
+                     width: 60, height: 60),
         CustomButton(label: "Right", keyCode: 39,
-                    x: UIScreen.main.bounds.width * 0.39,
-                    y: UIScreen.main.bounds.height * 0.185,
-                    width: 60, height: 60),
-        
+                     x: UIScreen.main.bounds.width * 0.39,
+                     y: UIScreen.main.bounds.height * 0.185,
+                     width: 60, height: 60),
         CustomButton(label: "A", keyCode: 65,
-                    x: UIScreen.main.bounds.width * 0.85,
-                    y: UIScreen.main.bounds.height * 0.15,
-                    width: 60, height: 60),
+                     x: UIScreen.main.bounds.width * 0.85,
+                     y: UIScreen.main.bounds.height * 0.15,
+                     width: 60, height: 60),
         CustomButton(label: "B", keyCode: 66,
-                    x: UIScreen.main.bounds.width * 0.65,
-                    y: UIScreen.main.bounds.height * 0.24,
-                    width: 60, height: 60),
-        
+                     x: UIScreen.main.bounds.width * 0.65,
+                     y: UIScreen.main.bounds.height * 0.24,
+                     width: 60, height: 60),
         CustomButton(label: "Start", keyCode: 32,
-                    x: UIScreen.main.bounds.width * 0.60,
-                    y: UIScreen.main.bounds.height * 0.32,
-                    width: 60, height: 60),
+                     x: UIScreen.main.bounds.width * 0.60,
+                     y: UIScreen.main.bounds.height * 0.32,
+                     width: 60, height: 60),
         CustomButton(label: "Select", keyCode: 83,
-                    x: UIScreen.main.bounds.width * 0.40,
-                    y: UIScreen.main.bounds.height * 0.32,
-                    width: 60, height: 60),
+                     x: UIScreen.main.bounds.width * 0.40,
+                     y: UIScreen.main.bounds.height * 0.32,
+                     width: 60, height: 60),
         CustomButton(label: "Reset", keyCode: 82,
-                    x: UIScreen.main.bounds.width * 0.05,
-                    y: UIScreen.main.bounds.height * 0.32,
-                    width: 60, height: 60)
+                     x: UIScreen.main.bounds.width * 0.05,
+                     y: UIScreen.main.bounds.height * 0.32,
+                     width: 60, height: 60)
     ]
     @State private var customButtonsLandscape: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: 100, y: 40, width: 60, height: 60),
@@ -82,6 +103,7 @@ struct EmulatorView: View {
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait: Data? = nil
     @State private var activePresses = Set<Int>()
+    
     var body: some View {
         let nesWebView = NESWebView(game: game, webViewModel: webViewModel)
         NavigationView {
@@ -131,9 +153,16 @@ struct EmulatorView: View {
                     importedPNGDataLandscape = loadPNG(key: "importedPNGLandscape")
                     importedPNGDataPortrait = loadPNG(key: "importedPNGPortrait")
                 }
+                AudioManager.shared.startSilentAudio()
             }
             .onDisappear {
                 stopListeningForPhysicalControllers()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+                webViewModel.webView?.evaluateJavaScript("if (window.pauseEmulator) { window.pauseEmulator(); }")
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                webViewModel.webView?.evaluateJavaScript("if (window.resumeEmulator) { window.resumeEmulator(); }")
             }
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -215,6 +244,7 @@ struct EmulatorView: View {
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarBackButtonHidden(true)
     }
+        
     private func onScreenPress(keyCode: Int) {
         if !activePresses.contains(keyCode) {
             activePresses.insert(keyCode)
@@ -272,43 +302,41 @@ struct EmulatorView: View {
         if isPortrait {
             customButtonsPortrait = [
                 CustomButton(label: "Up", keyCode: 38,
-                            x: UIScreen.main.bounds.width * 0.22,
-                            y: UIScreen.main.bounds.height * 0.12,
-                            width: 60, height: 60),
+                             x: UIScreen.main.bounds.width * 0.22,
+                             y: UIScreen.main.bounds.height * 0.12,
+                             width: 60, height: 60),
                 CustomButton(label: "Down", keyCode: 40,
-                            x: UIScreen.main.bounds.width * 0.22,
-                            y: UIScreen.main.bounds.height * 0.25,
-                            width: 60, height: 60),
+                             x: UIScreen.main.bounds.width * 0.22,
+                             y: UIScreen.main.bounds.height * 0.25,
+                             width: 60, height: 60),
                 CustomButton(label: "Left", keyCode: 37,
-                            x: UIScreen.main.bounds.width * 0.05,
-                            y: UIScreen.main.bounds.height * 0.185,
-                            width: 60, height: 60),
+                             x: UIScreen.main.bounds.width * 0.05,
+                             y: UIScreen.main.bounds.height * 0.185,
+                             width: 60, height: 60),
                 CustomButton(label: "Right", keyCode: 39,
-                            x: UIScreen.main.bounds.width * 0.39,
-                            y: UIScreen.main.bounds.height * 0.185,
-                            width: 60, height: 60),
-                
+                             x: UIScreen.main.bounds.width * 0.39,
+                             y: UIScreen.main.bounds.height * 0.185,
+                             width: 60, height: 60),
                 CustomButton(label: "A", keyCode: 65,
-                            x: UIScreen.main.bounds.width * 0.85,
-                            y: UIScreen.main.bounds.height * 0.15,
-                            width: 60, height: 60),
+                             x: UIScreen.main.bounds.width * 0.85,
+                             y: UIScreen.main.bounds.height * 0.15,
+                             width: 60, height: 60),
                 CustomButton(label: "B", keyCode: 66,
-                            x: UIScreen.main.bounds.width * 0.65,
-                            y: UIScreen.main.bounds.height * 0.24,
-                            width: 60, height: 60),
-                
+                             x: UIScreen.main.bounds.width * 0.65,
+                             y: UIScreen.main.bounds.height * 0.24,
+                             width: 60, height: 60),
                 CustomButton(label: "Start", keyCode: 32,
-                            x: UIScreen.main.bounds.width * 0.60,
-                            y: UIScreen.main.bounds.height * 0.32,
-                            width: 60, height: 60),
+                             x: UIScreen.main.bounds.width * 0.60,
+                             y: UIScreen.main.bounds.height * 0.32,
+                             width: 60, height: 60),
                 CustomButton(label: "Select", keyCode: 83,
-                            x: UIScreen.main.bounds.width * 0.40,
-                            y: UIScreen.main.bounds.height * 0.32,
-                            width: 60, height: 60),
+                             x: UIScreen.main.bounds.width * 0.40,
+                             y: UIScreen.main.bounds.height * 0.32,
+                             width: 60, height: 60),
                 CustomButton(label: "Reset", keyCode: 82,
-                            x: UIScreen.main.bounds.width * 0.05,
-                            y: UIScreen.main.bounds.height * 0.32,
-                            width: 60, height: 60)
+                             x: UIScreen.main.bounds.width * 0.05,
+                             y: UIScreen.main.bounds.height * 0.32,
+                             width: 60, height: 60)
             ]
         } else {
             customButtonsLandscape = [
@@ -347,6 +375,7 @@ struct EmulatorView: View {
         importedPNGDataLandscape = nil
         importedPNGDataPortrait = nil
     }
+    
     private func setupPhysicalController() {
         NotificationCenter.default.addObserver(forName: .GCControllerDidConnect, object: nil, queue: .main) { _ in
             configurePhysicalControllers()
