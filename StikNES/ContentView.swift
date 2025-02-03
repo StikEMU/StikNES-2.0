@@ -140,6 +140,38 @@ After you import and launch your first game, please open the menu, navigate to L
             .onAppear(perform: loadImportedGames)
             .navigationTitle("StikNES")
             .toolbar {
+                ToolbarItemGroup(placement: .navigationBarLeading) {
+                    Button(action: {
+                        if let url = URL(string: "https://discord.gg/a6qxs97Gun") {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        Label("Discord", systemImage: "ellipsis.message.fill")
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                    }
+                    Button(action: {
+                        if let url = URL(string: "https://github.com/StikEMU/StikNES-2.0") {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                    }
+                    Button(action: {
+                        if let url = URL(string: "https://stiknes.com") {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        Label("Privacy Policy", systemImage: "lock.doc")
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                    }
+                }
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Button(action: {
                         showSkinManager = true

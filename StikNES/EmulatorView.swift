@@ -31,6 +31,9 @@ struct EmulatorView: View {
     @State private var selectedPhotoLandscape: PhotosPickerItem?
     @State private var selectedPhotoPortrait: PhotosPickerItem?
     @State private var isHelpDialogPresented = false
+    @State private var showResetLayoutConfirmation = false
+    @State private var showResetSkinsConfirmation = false
+    @State private var showForceReloadConfirmation = false
     @State private var customButtonsPortrait: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.12, width: 60, height: 60),
         CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
@@ -112,6 +115,16 @@ struct EmulatorView: View {
             }
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    if isEditingLayout {
+                                Button {
+                                    isEditingLayout = false
+                                    saveCurrentOrientationLayout()
+                                } label: {
+                                    Text("Done")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.blue)
+                                }
+                            }
                     Menu {
                         Menu("Settings") {
                             Toggle(isOn: $isAutoSprintEnabled) { Label("Auto Sprint", systemImage: "hare.fill") }
@@ -123,9 +136,8 @@ struct EmulatorView: View {
                                 isEditingLayout.toggle()
                                 if !isEditingLayout { saveCurrentOrientationLayout() }
                             } label: { Label("Customize Layout", systemImage: "rectangle.and.pencil.and.ellipsis") }
-                            Button {
-                                resetToDefaultLayoutCurrent()
-                                saveCurrentOrientationLayout()
+                            Button(role: .destructive) {
+                                showResetLayoutConfirmation = true
                             } label: { Label("Reset Layout (Current)", systemImage: "arrow.clockwise") }
                         }
                         Menu("Skins") {
@@ -136,8 +148,8 @@ struct EmulatorView: View {
                                 showingPhotoPickerPortrait = true
                             } label: { Label("Import Skin (Portrait)", systemImage: "iphone.gen3") }
                             Toggle(isOn: $isSkinVisible) { Label("Show Skins", systemImage: "photo") }
-                            Button {
-                                resetSkinsToDefaults()
+                            Button(role: .destructive) {
+                                showResetSkinsConfirmation = true
                             } label: { Label("Reset Skins to Defaults", systemImage: "arrow.clockwise") }
                         }
                         Menu("Help") {
@@ -153,6 +165,9 @@ struct EmulatorView: View {
                         }
                         Section {
                             Button(role: .destructive) {
+                                showForceReloadConfirmation = true
+                            } label: { Label("Force Reload", systemImage: "arrow.clockwise.circle") }
+                            Button(role: .destructive) {
                                 showQuitConfirmation = true
                             } label: { Label("Quit", systemImage: "xmark.circle") }
                         }
@@ -161,6 +176,31 @@ struct EmulatorView: View {
                             .font(.system(size: 22, weight: .bold))
                     }
                 }
+            }
+            .alert("Reset Layout", isPresented: $showResetLayoutConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Reset", role: .destructive) {
+                    resetToDefaultLayoutCurrent()
+                    saveCurrentOrientationLayout()
+                }
+            } message: {
+                Text("Are you sure you want to reset the current layout to default?")
+            }
+            .alert("Reset Skins", isPresented: $showResetSkinsConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Reset", role: .destructive) {
+                    resetSkinsToDefaults()
+                }
+            } message: {
+                Text("Are you sure you want to reset all skins to default?")
+            }
+            .alert("Force Reload", isPresented: $showForceReloadConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Reload", role: .destructive) {
+                    forceReloadWebView()
+                }
+            } message: {
+                Text("Are you sure you want to force reload the emulator? This may interrupt your current game.")
             }
             .alert(isPresented: $isHelpDialogPresented) {
                 Alert(
@@ -190,6 +230,18 @@ struct EmulatorView: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarBackButtonHidden(true)
+    }
+    private func forceReloadWebView() {
+        // Restart the server
+        appDelegate?.restartServer()
+        
+        // Delay to ensure server is restarted
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // Reload the current game
+            if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
+                webViewModel.webView.load(URLRequest(url: url))
+            }
+        }
     }
     
     private func onScreenPress(keyCode: Int) {
