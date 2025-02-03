@@ -119,7 +119,6 @@ struct EmulatorView: View {
                                 isEditingLayout.toggle()
                                 if !isEditingLayout { saveCurrentOrientationLayout() }
                             } label: { Label("Customize Layout", systemImage: "rectangle.and.pencil.and.ellipsis") }
-                            Toggle(isOn: $isSkinVisible) { Label("Show Skins", systemImage: "photo") }
                             Button {
                                 resetToDefaultLayoutCurrent()
                                 saveCurrentOrientationLayout()
@@ -132,6 +131,7 @@ struct EmulatorView: View {
                             Button {
                                 showingPhotoPickerPortrait = true
                             } label: { Label("Import Skin (Portrait)", systemImage: "iphone.gen3") }
+                            Toggle(isOn: $isSkinVisible) { Label("Show Skins", systemImage: "photo") }
                             Button {
                                 resetSkinsToDefaults()
                             } label: { Label("Reset Skins to Defaults", systemImage: "arrow.clockwise") }
