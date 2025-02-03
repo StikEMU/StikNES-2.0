@@ -30,6 +30,7 @@ struct EmulatorView: View {
     @State private var showingPhotoPickerPortrait = false
     @State private var selectedPhotoLandscape: PhotosPickerItem?
     @State private var selectedPhotoPortrait: PhotosPickerItem?
+    @State private var isHelpDialogPresented = false
     @State private var customButtonsPortrait: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.12, width: 60, height: 60),
         CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
@@ -62,6 +63,9 @@ struct EmulatorView: View {
     private var appDelegate: AppDelegate? {
         UIApplication.shared.delegate as? AppDelegate
     }
+    private let appVersion: String = {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+    }()
     
     var body: some View {
         let nesWebView = NESWebView(game: game, webViewModel: webViewModel)
@@ -136,6 +140,12 @@ struct EmulatorView: View {
                                 resetSkinsToDefaults()
                             } label: { Label("Reset Skins to Defaults", systemImage: "arrow.clockwise") }
                         }
+                        Menu("Help") {
+                            Button {
+                                isHelpDialogPresented = true
+                            } label: { Label("Help my screen turned white!", systemImage: "questionmark.circle") }
+                            Text("App Version: v\(appVersion)")
+                        }
                         Menu("Other") {
                             Button {
                                 isCreditsPresented.toggle()
@@ -151,6 +161,13 @@ struct EmulatorView: View {
                             .font(.system(size: 22, weight: .bold))
                     }
                 }
+            }
+            .alert(isPresented: $isHelpDialogPresented) {
+                Alert(
+                    title: Text("Help my screen turned white!"),
+                    message: Text("If your screen has turned white and emulation is not working, try restarting the app. This usually resolves the issue."),
+                    dismissButton: .default(Text("OK"))
+                )
             }
             .sheet(isPresented: $isCreditsPresented) {
                 CreditsView()

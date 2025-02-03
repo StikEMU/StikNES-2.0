@@ -38,7 +38,10 @@ struct ContentView: View {
     private let columns = [
         GridItem(.adaptive(minimum: 160), spacing: 16)
     ]
-
+    private let appVersion: String = {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+    }()
+    
     var filteredGames: [Game] {
         importedGames.filter { game in
             searchText.isEmpty || game.name.localizedCaseInsensitiveContains(searchText)
@@ -77,6 +80,11 @@ After you import and launch your first game, please open the menu, navigate to L
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 24)
                         }
+                        Spacer()
+                        Text("StikNES v\(appVersion)")
+                            .foregroundColor(.gray)
+                            .font(.caption)
+                            .padding(.bottom, 8)
                     }
                 } else {
                     VStack(spacing: 0) {
@@ -100,6 +108,11 @@ After you import and launch your first game, please open the menu, navigate to L
                             }
                             .padding(.horizontal, 16)
                             .padding(.top, 16)
+                            Spacer()
+                            Text("StikNES v\(appVersion)")
+                                .foregroundColor(.gray)
+                                .font(.caption)
+                                .padding(.bottom, 8)
                         }
                         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
                     }
