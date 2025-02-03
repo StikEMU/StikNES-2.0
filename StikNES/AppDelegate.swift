@@ -7,81 +7,140 @@
 
 import UIKit
 import Vapor
+import NIO
+import Logging
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
-    var app: Application?
-    var emulatorDirectory: URL?
-    private var serverRunning = false
-
+    private var app: Application?
+    private var emulatorDirectory: URL?
+    private let logger = Logger(label: "com.emulator.server")
+    
+    private enum ServerState {
+        case notRunning
+        case starting
+        case running
+        case stopping
+    }
+    private var currentServerState: ServerState = .notRunning
+    
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        setupLogging()
         setupEmulatorFiles()
-        startServer()
+        restartServer()
         return true
     }
-
-    func setupEmulatorFiles() {
+    
+    private func setupLogging() {
+        LoggingSystem.bootstrap { label in
+            var handler = StreamLogHandler.standardOutput(label: label)
+            handler.logLevel = .info
+            return handler
+        }
+    }
+    
+    private func setupEmulatorFiles() {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
         let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
-
+        
         let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: emulatorPath.path) {
-            do {
-                try fileManager.createDirectory(at: emulatorPath, withIntermediateDirectories: true, attributes: nil)
-            } catch {
-                print("Failed to create emulator directory: \(error)")
+        do {
+            try fileManager.createDirectory(
+                at: emulatorPath,
+                withIntermediateDirectories: true,
+                attributes: [.posixPermissions: 0o755]
+            )
+            
+            let emulatorFiles = ["index.html", "nes_rust_wasm.js", "nes_rust_wasm_bg.wasm"]
+            
+            for fileName in emulatorFiles {
+                guard let bundleURL = Bundle.main.url(forResource: fileName, withExtension: nil) else {
+                    logger.error("Failed to find \(fileName) in bundle")
+                    continue
+                }
+                
+                let destinationURL = emulatorPath.appendingPathComponent(fileName)
+                try? fileManager.removeItem(at: destinationURL)
+                try fileManager.copyItem(at: bundleURL, to: destinationURL)
+            }
+            
+            self.emulatorDirectory = emulatorPath
+            logger.info("Emulator files prepared at \(emulatorPath.path)")
+        } catch {
+            logger.error("Emulator file setup failed: \(error)")
+        }
+    }
+    
+    public func restartServer(force: Bool = false) {
+        guard currentServerState == .notRunning || force else {
+            logger.warning("Server restart blocked. Current state: \(currentServerState)")
+            return
+        }
+        
+        if currentServerState == .running {
+            stopServer()
+        }
+        
+        currentServerState = .starting
+        
+        setupEmulatorFiles()
+        
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            Thread.sleep(forTimeInterval: 0.5)
+            
+            self.startServer()
+            
+            self.verifyServerConnection()
+        }
+    }
+    
+    private func verifyServerConnection() {
+        let url = URL(string: "http://127.0.0.1:8080")!
+        let task = URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
+            if let error = error {
+                self?.logger.error("Server restart verification failed: \(error.localizedDescription)")
+                self?.currentServerState = .notRunning
                 return
             }
-        }
-
-        let emulatorFiles = ["index.html", "nes_rust_wasm.js", "nes_rust_wasm_bg.wasm"]
-
-        for fileName in emulatorFiles {
-            guard let bundleURL = Bundle.main.url(forResource: fileName, withExtension: nil) else {
-                print("Failed to find \(fileName) in bundle")
-                continue
+            
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                self?.logger.warning("Server restart verification returned unexpected status")
+                self?.currentServerState = .notRunning
+                return
             }
-
-            let destinationURL = emulatorPath.appendingPathComponent(fileName)
-            do {
-                if fileManager.fileExists(atPath: destinationURL.path) {
-                    try fileManager.removeItem(at: destinationURL)
-                }
-                try fileManager.copyItem(at: bundleURL, to: destinationURL)
-            } catch {
-                print("Failed to copy \(fileName): \(error)")
-            }
+            
+            self?.logger.info("Server restart verified successfully")
+            self?.currentServerState = .running
         }
-
-        self.emulatorDirectory = emulatorPath
-        print("Emulator files copied to \(emulatorPath.path)")
+        task.resume()
     }
-
-    // New function to start the server
-    func startServer() {
-        guard !serverRunning else {
-            print("Server is already running")
+    
+    private func startServer() {
+        guard let emulatorDirectory = emulatorDirectory, currentServerState != .running else {
+            logger.warning("Server start prevented - already running or no directory")
             return
         }
-
-        guard let emulatorDirectory = emulatorDirectory else {
-            print("Emulator directory not set up")
-            return
-        }
-
+        
         do {
             var env = try Environment.detect()
-            try LoggingSystem.bootstrap(from: &env)
-
-            app = Application(env)
-            guard let app = app else { return }
-
+            env.arguments = ["vapor"]
+            
+            let app = Application(env)
+            self.app = app
+            
+            app.http.server.configuration.hostname = "127.0.0.1"
+            app.http.server.configuration.port = 8080
+            app.http.server.configuration.responseCompression = .enabled
+            app.http.server.configuration.requestDecompression = .enabled
+            
             app.middleware.use(IPRestrictionMiddleware())
             app.middleware.use(FileMiddleware(publicDirectory: emulatorDirectory.path))
-
+            
             app.get { req in
                 let indexPath = emulatorDirectory.appendingPathComponent("index.html").path
                 do {
@@ -91,65 +150,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     return Response(status: .internalServerError)
                 }
             }
-
+            
             app.get("/*") { req -> Response in
                 let filePath = emulatorDirectory.appendingPathComponent(req.url.path).path
-                if FileManager.default.fileExists(atPath: filePath) {
-                    return req.fileio.streamFile(at: filePath)
-                } else {
+                guard FileManager.default.fileExists(atPath: filePath) else {
                     return Response(status: .notFound, body: .init(string: "File not found"))
                 }
+                return req.fileio.streamFile(at: filePath)
             }
-
-            DispatchQueue.global(qos: .background).async {
+            
+            DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     try app.run()
-                    self.serverRunning = true
-                    print("Server started at http://127.0.0.1:8080")
+                    self.currentServerState = .running
+                    self.logger.info("Server started successfully")
                 } catch {
-                    print("Failed to start server: \(error)")
-                    self.serverRunning = false
+                    self.logger.error("Server startup failed: \(error)")
+                    self.currentServerState = .notRunning
                 }
             }
         } catch {
-            print("Failed to setup Vapor server: \(error)")
+            logger.error("Vapor server setup failed: \(error)")
+            currentServerState = .notRunning
         }
     }
-
-    // New function to stop the server
+    
     func stopServer() {
-        guard serverRunning else {
-            print("Server is not running")
+        guard currentServerState == .running else {
+            logger.warning("Cannot stop server - not running")
             return
         }
-
+        
+        currentServerState = .stopping
         app?.shutdown()
-        serverRunning = false
-        print("Server stopped")
+        currentServerState = .notRunning
+        logger.info("Server stopped")
     }
-
-    func restartServer() {
-        stopServer()
-        print("Server stopped. Restarting...")
-
-        if let emulatorDirectory = emulatorDirectory {
-            let indexFileURL = emulatorDirectory.appendingPathComponent("index.html")
-            do {
-                if FileManager.default.fileExists(atPath: indexFileURL.path) {
-                    try FileManager.default.removeItem(at: indexFileURL)
-                }
-                if let bundleURL = Bundle.main.url(forResource: "index", withExtension: "html") {
-                    try FileManager.default.copyItem(at: bundleURL, to: indexFileURL)
-                    print("index.html re-copied from the app bundle.")
-                }
-            } catch {
-                print("Error reloading index.html: \(error)")
-            }
-        }
-
-        startServer()
-    }
-
+    
     func applicationWillTerminate(_ application: UIApplication) {
         stopServer()
     }
