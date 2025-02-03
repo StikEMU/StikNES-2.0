@@ -34,6 +34,9 @@ struct EmulatorView: View {
     @State private var showResetLayoutConfirmation = false
     @State private var showResetSkinsConfirmation = false
     @State private var showForceReloadConfirmation = false
+    @State private var webViewRecoveryAttempts = 0
+    private let maxRecoveryAttempts = 3
+    private let recoveryTimeout = 5.0 // seconds
     @State private var customButtonsPortrait: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.12, width: 60, height: 60),
         CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
@@ -232,18 +235,65 @@ struct EmulatorView: View {
         .navigationBarBackButtonHidden(true)
     }
     private func forceReloadWebView() {
-        // Restart the server
+        webViewRecoveryAttempts = 0
+        
+        webViewModel.webView.stopLoading()
+        
+        if let websiteDataTypes = NSSet(array: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache]) as? Set<String> {
+            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes, modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {})
+        }
+        
         appDelegate?.restartServer()
         
-        // Delay to ensure server is restarted
+        startRecoveryCheck()
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Reload the current game
             if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
-                webViewModel.webView.load(URLRequest(url: url))
+                let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
+                webViewModel.webView.load(request)
             }
         }
     }
     
+    private func startRecoveryCheck() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + recoveryTimeout) {
+            checkWebViewRecovery()
+        }
+    }
+    
+    private func checkWebViewRecovery() {
+        webViewModel.webView.evaluateJavaScript("document.body.innerHTML.length") { (result, error) in
+            if let length = result as? Int {
+                if length < 100 {
+                    handleFailedRecovery()
+                }
+            } else {
+                handleFailedRecovery()
+            }
+        }
+    }
+    
+    private func handleFailedRecovery() {
+        webViewRecoveryAttempts += 1
+        
+        if webViewRecoveryAttempts < maxRecoveryAttempts {
+            forceReloadWebView()
+        } else {
+            webViewRecoveryAttempts = 0
+            
+            let alertController = UIAlertController(
+                title: "Recovery Failed",
+                message: "The emulator couldn't recover from a white screen error. Please try restarting the app.",
+                preferredStyle: .alert
+            )
+            alertController.addAction(UIAlertAction(title: "OK", style: .default))
+            
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let viewController = windowScene.windows.first?.rootViewController {
+                viewController.present(alertController, animated: true)
+            }
+        }
+    }
     private func onScreenPress(keyCode: Int) {
         if !activePresses.contains(keyCode) {
             activePresses.insert(keyCode)
