@@ -40,17 +40,21 @@ struct EmulatorView: View {
         CustomButton(label: "Select", keyCode: 83, x: UIScreen.main.bounds.width * 0.40, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
         CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
     ]
-    @State private var customButtonsLandscape: [CustomButton] = [
-        CustomButton(label: "Up", keyCode: 38, x: 100, y: 40, width: 60, height: 60),
-        CustomButton(label: "Down", keyCode: 40, x: 100, y: 160, width: 60, height: 60),
-        CustomButton(label: "Left", keyCode: 37, x: 40, y: 100, width: 60, height: 60),
-        CustomButton(label: "Right", keyCode: 39, x: 160, y: 100, width: 60, height: 60),
-        CustomButton(label: "A", keyCode: 65, x: 600, y: 80, width: 60, height: 60),
-        CustomButton(label: "B", keyCode: 66, x: 540, y: 100, width: 60, height: 60),
-        CustomButton(label: "Start", keyCode: 32, x: 300, y: 70, width: 60, height: 60),
-        CustomButton(label: "Select", keyCode: 83, x: 360, y: 70, width: 60, height: 60),
-        CustomButton(label: "Reset", keyCode: 82, x: 300, y: 120, width: 60, height: 60)
-    ]
+    @State private var customButtonsLandscape: [CustomButton] = {
+        let landscapeWidth = max(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+        let landscapeHeight = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+        return [
+            CustomButton(label: "Up", keyCode: 38, x: landscapeWidth * 0.13, y: landscapeHeight * 0.61, width: 60, height: 60),
+            CustomButton(label: "Down", keyCode: 40, x: landscapeWidth * 0.13, y: landscapeHeight * 0.88, width: 60, height: 60),
+            CustomButton(label: "Left", keyCode: 37, x: landscapeWidth * 0.06, y: landscapeHeight * 0.74, width: 60, height: 60),
+            CustomButton(label: "Right", keyCode: 39, x: landscapeWidth * 0.20, y: landscapeHeight * 0.74, width: 60, height: 60),
+            CustomButton(label: "A", keyCode: 65, x: landscapeWidth * 0.92, y: landscapeHeight * 0.67, width: 60, height: 60),
+            CustomButton(label: "B", keyCode: 66, x: landscapeWidth * 0.84, y: landscapeHeight * 0.84, width: 60, height: 60),
+            CustomButton(label: "Select", keyCode: 83, x: landscapeWidth * 0.44, y: landscapeHeight * 0.90, width: 60, height: 60),
+            CustomButton(label: "Start", keyCode: 32, x: landscapeWidth * 0.56, y: landscapeHeight * 0.90, width: 60, height: 60),
+            CustomButton(label: "Reset", keyCode: 82, x: landscapeWidth * 0.50, y: landscapeHeight * 0.04, width: 60, height: 60)
+        ]
+    }()
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait: Data? = nil
     @State private var activePresses = Set<Int>()
@@ -242,16 +246,19 @@ struct EmulatorView: View {
                 CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
             ]
         } else {
+            let landscapeWidth = max(size.width, size.height)
+            let landscapeHeight = min(size.width, size.height)
+            
             customButtonsLandscape = [
-                CustomButton(label: "Up", keyCode: 38, x: 100, y: 40, width: 60, height: 60),
-                CustomButton(label: "Down", keyCode: 40, x: 100, y: 160, width: 60, height: 60),
-                CustomButton(label: "Left", keyCode: 37, x: 40, y: 100, width: 60, height: 60),
-                CustomButton(label: "Right", keyCode: 39, x: 160, y: 100, width: 60, height: 60),
-                CustomButton(label: "A", keyCode: 65, x: 600, y: 80, width: 60, height: 60),
-                CustomButton(label: "B", keyCode: 66, x: 540, y: 100, width: 60, height: 60),
-                CustomButton(label: "Start", keyCode: 32, x: 300, y: 70, width: 60, height: 60),
-                CustomButton(label: "Select", keyCode: 83, x: 360, y: 70, width: 60, height: 60),
-                CustomButton(label: "Reset", keyCode: 82, x: 300, y: 120, width: 60, height: 60)
+                CustomButton(label: "Up", keyCode: 38, x: landscapeWidth * 0.13, y: landscapeHeight * 0.61, width: 60, height: 60),
+                CustomButton(label: "Down", keyCode: 40, x: landscapeWidth * 0.13, y: landscapeHeight * 0.88, width: 60, height: 60),
+                CustomButton(label: "Left", keyCode: 37, x: landscapeWidth * 0.06, y: landscapeHeight * 0.74, width: 60, height: 60),
+                CustomButton(label: "Right", keyCode: 39, x: landscapeWidth * 0.20, y: landscapeHeight * 0.74, width: 60, height: 60),
+                CustomButton(label: "A", keyCode: 65, x: landscapeWidth * 0.92, y: landscapeHeight * 0.67, width: 60, height: 60),
+                CustomButton(label: "B", keyCode: 66, x: landscapeWidth * 0.84, y: landscapeHeight * 0.84, width: 60, height: 60),
+                CustomButton(label: "Select", keyCode: 83, x: landscapeWidth * 0.44, y: landscapeHeight * 0.90, width: 60, height: 60),
+                CustomButton(label: "Start", keyCode: 32, x: landscapeWidth * 0.56, y: landscapeHeight * 0.90, width: 60, height: 60),
+                CustomButton(label: "Reset", keyCode: 82, x: landscapeWidth * 0.50, y: landscapeHeight * 0.04, width: 60, height: 60)
             ]
         }
     }
