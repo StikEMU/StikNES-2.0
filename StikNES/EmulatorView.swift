@@ -54,6 +54,9 @@ struct EmulatorView: View {
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait: Data? = nil
     @State private var activePresses = Set<Int>()
+    private var appDelegate: AppDelegate? {
+        UIApplication.shared.delegate as? AppDelegate
+    }
     
     var body: some View {
         let nesWebView = NESWebView(game: game, webViewModel: webViewModel)
@@ -148,6 +151,7 @@ struct EmulatorView: View {
             }
             .confirmationDialog("Are you sure you want to quit?", isPresented: $showQuitConfirmation, titleVisibility: .visible) {
                 Button("Quit", role: .destructive) {
+                    appDelegate?.stopServer()
                     quitGame()
                 }
                 Button("Cancel", role: .cancel) {}
@@ -516,16 +520,48 @@ struct CreditsView: View {
 struct NESWebView: UIViewRepresentable {
     let game: String
     @ObservedObject var webViewModel: WebViewModel
+    
+    // Add reference to AppDelegate to access server controls
+    private var appDelegate: AppDelegate? {
+        UIApplication.shared.delegate as? AppDelegate
+    }
+    
     func makeUIView(context: Context) -> WKWebView {
         let w = webViewModel.webView
-        if w.url == nil, let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
-            w.load(URLRequest(url: url))
+        if w.url == nil {
+            loadGame(webView: w)
         }
         return w
     }
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        // Check if the current URL contains a different game than the one we want to load
+        if let currentURL = uiView.url?.absoluteString,
+           !currentURL.contains("rom=\(game)") {
+            // Restart server and load new game
+            restartServerAndLoadGame(webView: uiView)
+        }
+    }
+    
+    private func loadGame(webView: WKWebView) {
+        if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
+            webView.load(URLRequest(url: url))
+        }
+    }
+    
+    private func restartServerAndLoadGame(webView: WKWebView) {
+        // Stop any current page load
+        webView.stopLoading()
+        
+        // Restart the server
+        appDelegate?.restartServer()
+        
+        // Wait briefly for the server to restart before loading the new game
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            loadGame(webView: webView)
+        }
+    }
 }
-
 class WebViewModel: ObservableObject {
     @Published var webView: WKWebView = WKWebView()
 }

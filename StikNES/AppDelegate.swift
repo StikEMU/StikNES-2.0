@@ -12,13 +12,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     var app: Application?
     var emulatorDirectory: URL?
+    private var serverRunning = false
 
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         setupEmulatorFiles()
-        setupServer()
+        startServer()
         return true
     }
 
@@ -59,7 +60,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         print("Emulator files copied to \(emulatorPath.path)")
     }
 
-    func setupServer() {
+    // New function to start the server
+    func startServer() {
+        guard !serverRunning else {
+            print("Server is already running")
+            return
+        }
+
         guard let emulatorDirectory = emulatorDirectory else {
             print("Emulator directory not set up")
             return
@@ -73,7 +80,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             guard let app = app else { return }
 
             app.middleware.use(IPRestrictionMiddleware())
-
             app.middleware.use(FileMiddleware(publicDirectory: emulatorDirectory.path))
 
             app.get { req in
@@ -98,19 +104,32 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             DispatchQueue.global(qos: .background).async {
                 do {
                     try app.run()
+                    self.serverRunning = true
+                    print("Server started at http://127.0.0.1:8080")
                 } catch {
                     print("Failed to start server: \(error)")
+                    self.serverRunning = false
                 }
             }
-
-            print("Server started at http://127.0.0.1:8080")
         } catch {
             print("Failed to setup Vapor server: \(error)")
         }
     }
 
-    func restartServer() {
+    // New function to stop the server
+    func stopServer() {
+        guard serverRunning else {
+            print("Server is not running")
+            return
+        }
+
         app?.shutdown()
+        serverRunning = false
+        print("Server stopped")
+    }
+
+    func restartServer() {
+        stopServer()
         print("Server stopped. Restarting...")
 
         if let emulatorDirectory = emulatorDirectory {
@@ -128,12 +147,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
 
-        setupServer()
+        startServer()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        app?.shutdown()
-        print("Server stopped.")
+        stopServer()
     }
 }
 
