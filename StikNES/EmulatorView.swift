@@ -205,7 +205,7 @@ struct EmulatorView: View {
             .alert(isPresented: $isHelpDialogPresented) {
                 Alert(
                     title: Text("Help my screen turned white!"),
-                    message: Text("If your screen has turned white and emulation is not working, try restarting the app. This usually resolves the issue."),
+                    message: Text("If your screen has turned white and emulation is not working, try hitting the force reload button. If that does not work, try restarting the app. This usually resolves the issue."),
                     dismissButton: .default(Text("OK"))
                 )
             }
