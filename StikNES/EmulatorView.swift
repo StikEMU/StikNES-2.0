@@ -20,6 +20,7 @@ struct EmulatorView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("isAutoSprintEnabled") private var isAutoSprintEnabled = false
     @AppStorage("isHapticFeedbackEnabled") private var isHapticFeedbackEnabled = false
+    @AppStorage("isSkinVisible") private var isSkinVisible = true
     @State private var didInitialize = false
     @State private var autoSprintCancellable: AnyCancellable?
     @State private var isCreditsPresented = false
@@ -118,6 +119,7 @@ struct EmulatorView: View {
                                 isEditingLayout.toggle()
                                 if !isEditingLayout { saveCurrentOrientationLayout() }
                             } label: { Label("Customize Layout", systemImage: "rectangle.and.pencil.and.ellipsis") }
+                            Toggle(isOn: $isSkinVisible) { Label("Show Skins", systemImage: "photo") }
                             Button {
                                 resetToDefaultLayoutCurrent()
                                 saveCurrentOrientationLayout()
@@ -528,7 +530,6 @@ struct NESWebView: UIViewRepresentable {
     let game: String
     @ObservedObject var webViewModel: WebViewModel
     
-    // Add reference to AppDelegate to access server controls
     private var appDelegate: AppDelegate? {
         UIApplication.shared.delegate as? AppDelegate
     }
@@ -542,10 +543,8 @@ struct NESWebView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        // Check if the current URL contains a different game than the one we want to load
         if let currentURL = uiView.url?.absoluteString,
            !currentURL.contains("rom=\(game)") {
-            // Restart server and load new game
             restartServerAndLoadGame(webView: uiView)
         }
     }
@@ -557,13 +556,10 @@ struct NESWebView: UIViewRepresentable {
     }
     
     private func restartServerAndLoadGame(webView: WKWebView) {
-        // Stop any current page load
         webView.stopLoading()
         
-        // Restart the server
         appDelegate?.restartServer()
         
-        // Wait briefly for the server to restart before loading the new game
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             loadGame(webView: webView)
         }
@@ -655,29 +651,34 @@ struct PNGOverlay: View {
     @Binding var buttons: [CustomButton]
     let importedPNGData: Data?
     let isPortrait: Bool
+    @AppStorage("isSkinVisible") private var isSkinVisible = true
+
     var body: some View {
         GeometryReader { g in
             let s = g.size
             ZStack {
-                if let d = importedPNGData, let img = UIImage(data: d) {
-                    Image(uiImage: img).resizable().scaledToFit().frame(width: s.width, height: s.height)
-                } else {
-                    if isPortrait {
-                        if let defaultVertical = UIImage(named: "StikNES_Vertical") {
-                            Image(uiImage: defaultVertical).resizable().scaledToFit().frame(width: s.width, height: s.height)
-                        } else {
-                            Rectangle().fill(Color.gray.opacity(0.5))
-                            Text("No Skin Imported").foregroundColor(.white)
-                        }
+                if isSkinVisible {
+                    if let d = importedPNGData, let img = UIImage(data: d) {
+                        Image(uiImage: img).resizable().scaledToFit().frame(width: s.width, height: s.height)
                     } else {
-                        if let defaultHorizontal = UIImage(named: "StikNES_Horizontal") {
-                            Image(uiImage: defaultHorizontal).resizable().scaledToFit().frame(width: s.width, height: s.height)
+                        if isPortrait {
+                            if let defaultVertical = UIImage(named: "StikNES_Vertical") {
+                                Image(uiImage: defaultVertical).resizable().scaledToFit().frame(width: s.width, height: s.height)
+                            } else {
+                                Rectangle().fill(Color.gray.opacity(0.5))
+                                Text("No Skin Imported").foregroundColor(.white)
+                            }
                         } else {
-                            Rectangle().fill(Color.gray.opacity(0.5))
-                            Text("No Skin Imported").foregroundColor(.white)
+                            if let defaultHorizontal = UIImage(named: "StikNES_Horizontal") {
+                                Image(uiImage: defaultHorizontal).resizable().scaledToFit().frame(width: s.width, height: s.height)
+                            } else {
+                                Rectangle().fill(Color.gray.opacity(0.5))
+                                Text("No Skin Imported").foregroundColor(.white)
+                            }
                         }
                     }
                 }
+
                 ForEach($buttons) { $btn in
                     DraggableButtonAreaView(button: $btn, isEditing: isEditing, screenSize: s, pressHandler: pressHandler, releaseHandler: releaseHandler)
                 }
