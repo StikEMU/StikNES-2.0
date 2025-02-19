@@ -12,7 +12,6 @@ import Network
 struct StikNESApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appStatusChecker = AppStatusChecker()
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -24,6 +23,7 @@ struct StikNESApp: App {
                 } else if appStatusChecker.isNetworkConnected {
                     if appStatusChecker.isAppAvailable {
                         ContentView()
+                            .id(UUID())
                             .transition(.opacity)
                             .preferredColorScheme(.dark)
                     } else {
@@ -40,10 +40,8 @@ struct StikNESApp: App {
             .animation(.easeInOut, value: appStatusChecker.isLoading)
             .onAppear {
                 appStatusChecker.checkAppStatus()
-            }
-            .onChange(of: scenePhase) { newPhase in
-                if newPhase == .active {
-                    appStatusChecker.checkAppStatus()
+                NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { _ in
+                    appStatusChecker.resetAndCheckStatus()
                 }
             }
             .preferredColorScheme(.dark)
@@ -108,11 +106,15 @@ class AppStatusChecker: ObservableObject {
     @Published var isNetworkConnected: Bool = false
     @Published var errorMessage: String?
 
-    private let url = URL(string: "https://stiknes.com/status.json")!
+    private let url = URL(string: "https://stiknes.com/status-beta.json")!
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue.global(qos: .background)
 
     init() {
+        startNetworkMonitoring()
+    }
+
+    private func startNetworkMonitoring() {
         monitor.pathUpdateHandler = { path in
             DispatchQueue.main.async {
                 self.isNetworkConnected = path.status == .satisfied
@@ -178,5 +180,14 @@ class AppStatusChecker: ObservableObject {
                 }
             }
         }.resume()
+    }
+
+    func resetAndCheckStatus() {
+        DispatchQueue.main.async {
+            self.isLoading = true
+            self.isAppAvailable = false
+            self.errorMessage = nil
+        }
+        checkAppStatus()
     }
 }

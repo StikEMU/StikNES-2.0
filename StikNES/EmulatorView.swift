@@ -36,7 +36,8 @@ struct EmulatorView: View {
     @State private var showForceReloadConfirmation = false
     @State private var webViewRecoveryAttempts = 0
     private let maxRecoveryAttempts = 3
-    private let recoveryTimeout = 5.0 // seconds
+    private let recoveryTimeout = 5.0
+
     @State private var customButtonsPortrait: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.12, width: 60, height: 60),
         CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
@@ -48,6 +49,7 @@ struct EmulatorView: View {
         CustomButton(label: "Select", keyCode: 83, x: UIScreen.main.bounds.width * 0.40, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
         CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
     ]
+    
     @State private var customButtonsLandscape: [CustomButton] = {
         let landscapeWidth = max(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
         let landscapeHeight = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
@@ -63,9 +65,13 @@ struct EmulatorView: View {
             CustomButton(label: "Reset", keyCode: 82, x: landscapeWidth * 0.50, y: landscapeHeight * 0.04, width: 60, height: 60)
         ]
     }()
+    
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait: Data? = nil
     @State private var activePresses = Set<Int>()
+    
+    @State private var reloadID = UUID()
+    
     private var appDelegate: AppDelegate? {
         UIApplication.shared.delegate as? AppDelegate
     }
@@ -74,177 +80,192 @@ struct EmulatorView: View {
     }()
     
     var body: some View {
-        let nesWebView = NESWebView(game: game, webViewModel: webViewModel)
-        NavigationView {
-            ZStack {
-                Color.black.edgesIgnoringSafeArea(.all)
-                GeometryReader { geometry in
-                    let isPortrait = geometry.size.height > geometry.size.width
-                    let displayedButtons = isPortrait ? $customButtonsPortrait : $customButtonsLandscape
-                    let pngDataToUse = isPortrait ? importedPNGDataPortrait : importedPNGDataLandscape
-                    if isPortrait {
-                        VStack(spacing: 0) {
-                            nesWebView.frame(width: geometry.size.width, height: geometry.size.height * 0.5)
-                            PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) }, releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) }, isEditing: isEditingLayout, buttons: displayedButtons, importedPNGData: pngDataToUse, isPortrait: true)
-                                .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
-                        }
-                    } else {
-                        ZStack {
-                            nesWebView.frame(width: geometry.size.width, height: geometry.size.height)
-                            PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) }, releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) }, isEditing: isEditingLayout, buttons: displayedButtons, importedPNGData: pngDataToUse, isPortrait: false)
-                                .edgesIgnoringSafeArea(.all)
-                        }
-                    }
-                }
-            }
-            .navigationBarBackButtonHidden(true)
-            .onAppear {
-                if !didInitialize {
-                    didInitialize = true
-                    setupPhysicalController()
-                    loadAllButtonLayouts()
-                    importedPNGDataLandscape = loadPNG(key: "importedPNGLandscape")
-                    importedPNGDataPortrait = loadPNG(key: "importedPNGPortrait")
-                }
-            }
-            .onDisappear {
-                stopListeningForPhysicalControllers()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
-                webViewModel.webView.evaluateJavaScript("if (window.pauseEmulator) { window.pauseEmulator(); }")
-            }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                webViewModel.webView.evaluateJavaScript("if (window.resumeEmulator) { window.resumeEmulator(); }")
-            }
-            .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    if isEditingLayout {
-                                Button {
-                                    isEditingLayout = false
-                                    saveCurrentOrientationLayout()
-                                } label: {
-                                    Text("Done")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.blue)
-                                }
+        Group {
+            NavigationView {
+                ZStack {
+                    Color.black.edgesIgnoringSafeArea(.all)
+                    GeometryReader { geometry in
+                        let isPortrait = geometry.size.height > geometry.size.width
+                        let displayedButtons = isPortrait ? $customButtonsPortrait : $customButtonsLandscape
+                        let pngDataToUse = isPortrait ? importedPNGDataPortrait : importedPNGDataLandscape
+                        if isPortrait {
+                            VStack(spacing: 0) {
+                                NESWebView(game: game, webViewModel: webViewModel)
+                                    .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
+                                PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
+                                           releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
+                                           isEditing: isEditingLayout,
+                                           buttons: displayedButtons,
+                                           importedPNGData: pngDataToUse,
+                                           isPortrait: true)
+                                    .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
                             }
-                    Menu {
-                        Menu("Settings") {
-                            Toggle(isOn: $isAutoSprintEnabled) { Label("Auto Sprint", systemImage: "hare.fill") }
-                                .onChange(of: isAutoSprintEnabled) { enabled in handleAutoSprintToggle(enabled: enabled) }
-                            Toggle(isOn: $isHapticFeedbackEnabled) { Label("Haptic Feedback", systemImage: "waveform.path.ecg") }
+                        } else {
+                            ZStack {
+                                NESWebView(game: game, webViewModel: webViewModel)
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
+                                           releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
+                                           isEditing: isEditingLayout,
+                                           buttons: displayedButtons,
+                                           importedPNGData: pngDataToUse,
+                                           isPortrait: false)
+                                    .edgesIgnoringSafeArea(.all)
+                            }
                         }
-                        Menu("Layout") {
-                            Button {
-                                isEditingLayout.toggle()
-                                if !isEditingLayout { saveCurrentOrientationLayout() }
-                            } label: { Label("Customize Layout", systemImage: "rectangle.and.pencil.and.ellipsis") }
-                            Button(role: .destructive) {
-                                showResetLayoutConfirmation = true
-                            } label: { Label("Reset Layout (Current)", systemImage: "arrow.clockwise") }
-                        }
-                        Menu("Skins") {
-                            Button {
-                                showingPhotoPickerLandscape = true
-                            } label: { Label("Import Skin (Landscape)", systemImage: "iphone.gen3.landscape") }
-                            Button {
-                                showingPhotoPickerPortrait = true
-                            } label: { Label("Import Skin (Portrait)", systemImage: "iphone.gen3") }
-                            Toggle(isOn: $isSkinVisible) { Label("Show Skins", systemImage: "photo") }
-                            Button(role: .destructive) {
-                                showResetSkinsConfirmation = true
-                            } label: { Label("Reset Skins to Defaults", systemImage: "arrow.clockwise") }
-                        }
-                        Menu("Help") {
-                            Button {
-                                isHelpDialogPresented = true
-                            } label: { Label("Help my screen turned white!", systemImage: "questionmark.circle") }
-                            Text("App Version: v\(appVersion)")
-                        }
-                        Menu("Other") {
-                            Button {
-                                isCreditsPresented.toggle()
-                            } label: { Label("Credits", systemImage: "info.circle") }
-                        }
-                        Section {
-                            Button(role: .destructive) {
-                                showForceReloadConfirmation = true
-                            } label: { Label("Force Reload", systemImage: "arrow.clockwise.circle") }
-                            Button(role: .destructive) {
-                                showQuitConfirmation = true
-                            } label: { Label("Quit", systemImage: "xmark.circle") }
-                        }
-                    } label: {
-                        Label("Menu", systemImage: "ellipsis.circle.fill")
-                            .font(.system(size: 22, weight: .bold))
                     }
                 }
-            }
-            .alert("Reset Layout", isPresented: $showResetLayoutConfirmation) {
-                Button("Cancel", role: .cancel) {}
-                Button("Reset", role: .destructive) {
-                    resetToDefaultLayoutCurrent()
-                    saveCurrentOrientationLayout()
+                .navigationBarBackButtonHidden(true)
+                .onAppear {
+                    if !didInitialize {
+                        didInitialize = true
+                        setupPhysicalController()
+                        loadAllButtonLayouts()
+                        importedPNGDataLandscape = loadPNG(key: "importedPNGLandscape")
+                        importedPNGDataPortrait = loadPNG(key: "importedPNGPortrait")
+                    }
                 }
-            } message: {
-                Text("Are you sure you want to reset the current layout to default?")
-            }
-            .alert("Reset Skins", isPresented: $showResetSkinsConfirmation) {
-                Button("Cancel", role: .cancel) {}
-                Button("Reset", role: .destructive) {
-                    resetSkinsToDefaults()
+                .onDisappear {
+                    stopListeningForPhysicalControllers()
                 }
-            } message: {
-                Text("Are you sure you want to reset all skins to default?")
-            }
-            .alert("Force Reload", isPresented: $showForceReloadConfirmation) {
-                Button("Cancel", role: .cancel) {}
-                Button("Reload", role: .destructive) {
-                    forceReloadWebView()
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+                    webViewModel.webView.evaluateJavaScript("if (window.pauseEmulator) { window.pauseEmulator(); }")
                 }
-            } message: {
-                Text("Are you sure you want to force reload the emulator? This may interrupt your current game.")
-            }
-            .alert(isPresented: $isHelpDialogPresented) {
-                Alert(
-                    title: Text("Help my screen turned white!"),
-                    message: Text("If your screen has turned white and emulation is not working, try hitting the force reload button. If that does not work, try restarting the app. This usually resolves the issue."),
-                    dismissButton: .default(Text("OK"))
-                )
-            }
-            .sheet(isPresented: $isCreditsPresented) {
-                CreditsView()
-            }
-            .confirmationDialog("Are you sure you want to quit?", isPresented: $showQuitConfirmation, titleVisibility: .visible) {
-                Button("Quit", role: .destructive) {
-                    appDelegate?.stopServer()
-                    quitGame()
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                    webViewModel.webView.evaluateJavaScript("if (window.resumeEmulator) { window.resumeEmulator(); }")
                 }
-                Button("Cancel", role: .cancel) {}
+                .toolbar {
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        if isEditingLayout {
+                            Button {
+                                isEditingLayout = false
+                                saveCurrentOrientationLayout()
+                            } label: {
+                                Text("Done")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        Menu {
+                            Menu("Settings") {
+                                Toggle(isOn: $isAutoSprintEnabled) { Label("Auto Sprint", systemImage: "hare.fill") }
+                                    .onChange(of: isAutoSprintEnabled) { enabled in handleAutoSprintToggle(enabled: enabled) }
+                                Toggle(isOn: $isHapticFeedbackEnabled) { Label("Haptic Feedback", systemImage: "waveform.path.ecg") }
+                            }
+                            Menu("Layout") {
+                                Button {
+                                    isEditingLayout.toggle()
+                                    if !isEditingLayout { saveCurrentOrientationLayout() }
+                                } label: { Label("Customize Layout", systemImage: "rectangle.and.pencil.and.ellipsis") }
+                                Button(role: .destructive) {
+                                    showResetLayoutConfirmation = true
+                                } label: { Label("Reset Layout (Current)", systemImage: "arrow.clockwise") }
+                            }
+                            Menu("Skins") {
+                                Button {
+                                    showingPhotoPickerLandscape = true
+                                } label: { Label("Import Skin (Landscape)", systemImage: "iphone.gen3.landscape") }
+                                Button {
+                                    showingPhotoPickerPortrait = true
+                                } label: { Label("Import Skin (Portrait)", systemImage: "iphone.gen3") }
+                                Toggle(isOn: $isSkinVisible) { Label("Show Skins", systemImage: "photo") }
+                                Button(role: .destructive) {
+                                    showResetSkinsConfirmation = true
+                                } label: { Label("Reset Skins to Defaults", systemImage: "arrow.clockwise") }
+                            }
+                            Menu("Help") {
+                                Button {
+                                    isHelpDialogPresented = true
+                                } label: { Label("Help my screen turned white!", systemImage: "questionmark.circle") }
+                                Text("App Version: v\(appVersion)")
+                            }
+                            Menu("Other") {
+                                Button {
+                                    isCreditsPresented.toggle()
+                                } label: { Label("Credits", systemImage: "info.circle") }
+                            }
+                            Section {
+                                Button(role: .destructive) {
+                                    showForceReloadConfirmation = true
+                                } label: { Label("Force Reload", systemImage: "arrow.clockwise.circle") }
+                                Button(role: .destructive) {
+                                    showQuitConfirmation = true
+                                } label: { Label("Quit", systemImage: "xmark.circle") }
+                            }
+                        } label: {
+                            Label("Menu", systemImage: "ellipsis.circle.fill")
+                                .font(.system(size: 22, weight: .bold))
+                        }
+                    }
+                }
+                .alert("Reset Layout", isPresented: $showResetLayoutConfirmation) {
+                    Button("Cancel", role: .cancel) {}
+                    Button("Reset", role: .destructive) {
+                        resetToDefaultLayoutCurrent()
+                        saveCurrentOrientationLayout()
+                    }
+                } message: {
+                    Text("Are you sure you want to reset the current layout to default?")
+                }
+                .alert("Reset Skins", isPresented: $showResetSkinsConfirmation) {
+                    Button("Cancel", role: .cancel) {}
+                    Button("Reset", role: .destructive) {
+                        resetSkinsToDefaults()
+                    }
+                } message: {
+                    Text("Are you sure you want to reset all skins to default?")
+                }
+                .alert("Force Reload", isPresented: $showForceReloadConfirmation) {
+                    Button("Cancel", role: .cancel) {}
+                    Button("Reload", role: .destructive) {
+                        forceReloadWebView()
+                    }
+                } message: {
+                    Text("Are you sure you want to force reload the emulator? This may interrupt your current game.")
+                }
+                .alert(isPresented: $isHelpDialogPresented) {
+                    Alert(
+                        title: Text("Help my screen turned white!"),
+                        message: Text("If your screen has turned white and emulation is not working, try hitting the force reload button. If that does not work, try restarting the app. This usually resolves the issue."),
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
+                .sheet(isPresented: $isCreditsPresented) {
+                    CreditsView()
+                }
+                .confirmationDialog("Are you sure you want to quit?", isPresented: $showQuitConfirmation, titleVisibility: .visible) {
+                    Button("Quit", role: .destructive) {
+                        appDelegate?.stopServer()
+                        quitGame()
+                    }
+                    Button("Cancel", role: .cancel) {}
+                }
+                .photosPicker(isPresented: $showingPhotoPickerLandscape, selection: $selectedPhotoLandscape, matching: .images, photoLibrary: .shared())
+                .onChange(of: selectedPhotoLandscape) { newItem in
+                    Task { await loadImageData(from: newItem, isLandscape: true) }
+                }
+                .photosPicker(isPresented: $showingPhotoPickerPortrait, selection: $selectedPhotoPortrait, matching: .images, photoLibrary: .shared())
+                .onChange(of: selectedPhotoPortrait) { newItem in
+                    Task { await loadImageData(from: newItem, isLandscape: false) }
+                }
             }
-            .photosPicker(isPresented: $showingPhotoPickerLandscape, selection: $selectedPhotoLandscape, matching: .images, photoLibrary: .shared())
-            .onChange(of: selectedPhotoLandscape) { newItem in
-                Task { await loadImageData(from: newItem, isLandscape: true) }
-            }
-            .photosPicker(isPresented: $showingPhotoPickerPortrait, selection: $selectedPhotoPortrait, matching: .images, photoLibrary: .shared())
-            .onChange(of: selectedPhotoPortrait) { newItem in
-                Task { await loadImageData(from: newItem, isLandscape: false) }
-            }
+            .navigationViewStyle(StackNavigationViewStyle())
+            .navigationBarBackButtonHidden(true)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
-        .navigationBarBackButtonHidden(true)
+        .id(reloadID)
     }
+    
     private func forceReloadWebView() {
         webViewRecoveryAttempts = 0
         
         webViewModel.webView.stopLoading()
-        
         if let websiteDataTypes = NSSet(array: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache]) as? Set<String> {
-            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes, modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {})
+            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes,
+                                                      modifiedSince: Date(timeIntervalSince1970: 0),
+                                                      completionHandler: {})
         }
         
         appDelegate?.restartServer()
-        
         startRecoveryCheck()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -253,6 +274,8 @@ struct EmulatorView: View {
                 webViewModel.webView.load(request)
             }
         }
+        
+        reloadID = UUID()
     }
     
     private func startRecoveryCheck() {
@@ -294,6 +317,7 @@ struct EmulatorView: View {
             }
         }
     }
+    
     private func onScreenPress(keyCode: Int) {
         if !activePresses.contains(keyCode) {
             activePresses.insert(keyCode)
@@ -369,7 +393,6 @@ struct EmulatorView: View {
         } else {
             let landscapeWidth = max(size.width, size.height)
             let landscapeHeight = min(size.width, size.height)
-            
             customButtonsLandscape = [
                 CustomButton(label: "Up", keyCode: 38, x: landscapeWidth * 0.13, y: landscapeHeight * 0.61, width: 60, height: 60),
                 CustomButton(label: "Down", keyCode: 40, x: landscapeWidth * 0.13, y: landscapeHeight * 0.88, width: 60, height: 60),
@@ -676,14 +699,13 @@ struct NESWebView: UIViewRepresentable {
     
     private func restartServerAndLoadGame(webView: WKWebView) {
         webView.stopLoading()
-        
         appDelegate?.restartServer()
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             loadGame(webView: webView)
         }
     }
 }
+
 class WebViewModel: ObservableObject {
     @Published var webView: WKWebView = WKWebView()
 }
@@ -721,29 +743,46 @@ struct DraggableButtonAreaView: View {
         ZStack(alignment: .bottomTrailing) {
             Color.clear.frame(width: button.width, height: button.height).contentShape(Rectangle())
             if isEditing {
-                Rectangle().fill(Color.blue.opacity(0.3)).frame(width: button.width, height: button.height).overlay(Text(button.label).foregroundColor(.white).font(.footnote).padding(2).background(Color.black.opacity(0.6)).cornerRadius(4), alignment: .center)
-                Circle().fill(Color.white).frame(width: 20, height: 20).padding(2).gesture(
-                    DragGesture()
-                        .onChanged { v in
-                            let dw = v.translation.width
-                            let dh = v.translation.height
-                            let nw = max(minButtonSize, currentWidth + dw)
-                            let nh = max(minButtonSize, currentHeight + dh)
-                            if button.x + nw <= screenSize.width {
-                                button.width = nw
+                Rectangle()
+                    .fill(Color.blue.opacity(0.3))
+                    .frame(width: button.width, height: button.height)
+                    .overlay(
+                        Text(button.label)
+                            .foregroundColor(.white)
+                            .font(.footnote)
+                            .padding(2)
+                            .background(Color.black.opacity(0.6))
+                            .cornerRadius(4)
+                    )
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 20, height: 20)
+                    .padding(2)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { v in
+                                let dw = v.translation.width
+                                let dh = v.translation.height
+                                let nw = max(minButtonSize, currentWidth + dw)
+                                let nh = max(minButtonSize, currentHeight + dh)
+                                if button.x + nw <= screenSize.width {
+                                    button.width = nw
+                                }
+                                if button.y + nh <= screenSize.height {
+                                    button.height = nh
+                                }
                             }
-                            if button.y + nh <= screenSize.height {
-                                button.height = nh
+                            .onEnded { _ in
+                                currentWidth = button.width
+                                currentHeight = button.height
                             }
-                        }
-                        .onEnded { _ in
-                            currentWidth = button.width
-                            currentHeight = button.height
-                        }
-                )
+                    )
             }
         }
-        .position(x: min(max(button.x + dragOffset.width, button.width / 2), screenSize.width - button.width / 2), y: min(max(button.y + dragOffset.height, button.height / 2), screenSize.height - button.height / 2))
+        .position(
+            x: min(max(button.x + dragOffset.width, button.width / 2), screenSize.width - button.width / 2),
+            y: min(max(button.y + dragOffset.height, button.height / 2), screenSize.height - button.height / 2)
+        )
         .gesture(
             isEditing ? DragGesture()
                 .onChanged { v in dragOffset = v.translation }
@@ -778,30 +817,45 @@ struct PNGOverlay: View {
             ZStack {
                 if isSkinVisible {
                     if let d = importedPNGData, let img = UIImage(data: d) {
-                        Image(uiImage: img).resizable().scaledToFit().frame(width: s.width, height: s.height)
+                        Image(uiImage: img)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: s.width, height: s.height)
                     } else {
                         if isPortrait {
                             if let defaultVertical = UIImage(named: "StikNES_Vertical") {
-                                Image(uiImage: defaultVertical).resizable().scaledToFit().frame(width: s.width, height: s.height)
+                                Image(uiImage: defaultVertical)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: s.width, height: s.height)
                             } else {
                                 Rectangle().fill(Color.gray.opacity(0.5))
-                                Text("No Skin Imported").foregroundColor(.white)
+                                Text("No Skin Imported")
+                                    .foregroundColor(.white)
                             }
                         } else {
                             if let defaultHorizontal = UIImage(named: "StikNES_Horizontal") {
-                                Image(uiImage: defaultHorizontal).resizable().scaledToFit().frame(width: s.width, height: s.height)
+                                Image(uiImage: defaultHorizontal)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: s.width, height: s.height)
                             } else {
                                 Rectangle().fill(Color.gray.opacity(0.5))
-                                Text("No Skin Imported").foregroundColor(.white)
+                                Text("No Skin Imported")
+                                    .foregroundColor(.white)
                             }
                         }
                     }
                 }
-
                 ForEach($buttons) { $btn in
-                    DraggableButtonAreaView(button: $btn, isEditing: isEditing, screenSize: s, pressHandler: pressHandler, releaseHandler: releaseHandler)
+                    DraggableButtonAreaView(button: $btn,
+                                            isEditing: isEditing,
+                                            screenSize: s,
+                                            pressHandler: pressHandler,
+                                            releaseHandler: releaseHandler)
                 }
             }
         }
     }
 }
+
