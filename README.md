@@ -42,10 +42,7 @@ For commercial use (e.g., businesses, SaaS, proprietary software), a separate **
 - Avoid AGPL’s open-source requirements.
 
 📩 To obtain a commercial license, contact:  
-📧 **[business@stiknes.com](mailto:business@stiknes.com)**  
-🌐 **[stiknes.com](https://stiknes.com)**  
-
----
+📧 **BluStik on Discord**  
 
 ### 🎨 **Skins Ownership**
 All **skins remain the property of their original creators**. StikNES does not claim ownership over any third-party or user-created skins.
