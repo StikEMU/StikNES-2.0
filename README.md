@@ -71,6 +71,4 @@ StikNES is **exclusively distributed on the App Store by 0-Blu**. No third party
 - **App Store distribution is exclusive to 0-Blu**  
 - **Swifter & nes-rust remain under their original open-source licenses**  
 
-For any questions or licensing inquiries, feel free to reach out!  
-
 **© 2025 0-Blu**
