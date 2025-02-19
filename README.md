@@ -2,7 +2,7 @@
 
 StikNES is a SwiftUI-based NES emulator designed for iOS devices. It leverages the power of SwiftUI to deliver a clean, modern interface while emulating the classic NES gaming experience using the `nes-rust` library.
 
-## For the few people who have code access please don't share anything. It will eventually be open source, just not right now.
+## For the few people who have code access, please don't share anything. It will eventually be open source, just not right now.
 
 ## ✨ **Features**
 - **SwiftUI Interface:** Clean and modern design.
@@ -12,22 +12,68 @@ StikNES is a SwiftUI-based NES emulator designed for iOS devices. It leverages t
 
 1. Clone this repository to your local machine.
    ```bash
-   git clone https://github.com/0-Blu/StikNES.git
+   git clone https://github.com/StikEMU/StikNES-2.0.git
    ```
 2. Open the project in Xcode.
 3. Build and run on your desired iOS device.
 
-## 📖 **Roadmap**
-For future plans and ongoing developments, see the [Roadmap](ROADMAP.md).
-
-## 🔍 **Compatibility**
-For a list of compatible devices and requirements, see the [Compatibility](COMPATIBILITY.md).
+---
 
 ## ⚙️ **License Information**
 
-- Portions of this project are based on the [nes-rust](https://github.com/takahirox/nes-rust) project, which is licensed under the [MIT License](https://github.com/takahirox/nes-rust/blob/master/LICENSE).
-- This project also uses the [Swifter](https://github.com/httpswift/swifter) library, licensed under the [BSD 3-Clause License](https://github.com/httpswift/swifter/blob/master/LICENSE).
+### 🆓 **Option 1: Free for Personal & Open-Source Use (GNU AGPLv3)**
+StikNES is licensed under the **GNU Affero General Public License v3 (AGPL-3.0)** for non-commercial and open-source use.
 
-## 📄 **Credits**
+#### You may:
+- Use, modify, and distribute the software **for personal, educational, or open-source projects**.
+- Contribute to the project under AGPLv3.
 
-Special thanks to the contributors of the [nes-rust](https://github.com/takahirox/nes-rust) and [Swifter](https://github.com/httpswift/swifter) projects.
+However, **if you use this software in a commercial setting, you must open-source your modifications and comply with AGPL-3.0.**
+
+📜 Full AGPLv3 license: [GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
+
+---
+
+### 💼 **Option 2: Commercial Use Requires a Paid License**
+For commercial use (e.g., businesses, SaaS, proprietary software), a separate **paid commercial license** is required.
+
+#### Commercial users **must purchase a license** to:
+- Use StikNES in proprietary or closed-source applications.
+- Avoid AGPL’s open-source requirements.
+
+📩 To obtain a commercial license, contact:  
+📧 **[business@stiknes.com](mailto:business@stiknes.com)**  
+🌐 **[stiknes.com](https://stiknes.com)**  
+
+---
+
+### 🎨 **Skins Ownership**
+All **skins remain the property of their original creators**. StikNES does not claim ownership over any third-party or user-created skins.
+
+---
+
+### 🔗 **Dependencies & Licensing**
+StikNES uses the following dependencies, which remain under their original licenses:
+
+- **[Swifter](https://github.com/httpswift/swifter)** ([BSD 3-Clause License](https://github.com/httpswift/swifter/blob/master/LICENSE))
+- **[nes-rust](https://github.com/takahirox/nes-rust)** ([MIT License](https://github.com/takahirox/nes-rust/blob/master/LICENSE))
+
+📜 Full MIT License: [MIT License](https://opensource.org/licenses/MIT)  
+📜 Full BSD License: [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause)
+
+---
+
+### 🛑 **Exclusive App Store Rights**
+StikNES is **exclusively distributed on the App Store by 0-Blu**. No third party is permitted to publish or distribute StikNES on the App Store without explicit permission.
+
+---
+
+### ✅ **Summary**
+- **Personal, educational, and open-source use** → Free under AGPLv3  
+- **Business, SaaS, or closed-source use** → Requires a paid license  
+- **App Store distribution is exclusive to 0-Blu**  
+- **Swifter & nes-rust remain under their original open-source licenses**  
+
+For any questions or licensing inquiries, feel free to reach out!  
+
+**© 2025 0-Blu**
