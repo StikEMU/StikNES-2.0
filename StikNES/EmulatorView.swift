@@ -13,10 +13,86 @@ import UniformTypeIdentifiers
 import PhotosUI
 import UIKit
 import AVFoundation
+import AVKit
+
+struct AirPlayButton: UIViewRepresentable {
+    func makeUIView(context: Context) -> AVRoutePickerView {
+        let routePickerView = AVRoutePickerView(frame: .zero)
+        routePickerView.activeTintColor = .blue
+        routePickerView.tintColor = .gray
+        return routePickerView
+    }
+    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
+}
+
+struct AirPlaySheetView: View {
+    var body: some View {
+        VStack {
+            Text("Select AirPlay Device")
+                .font(.headline)
+                .padding()
+            AirPlayButton()
+                .frame(width: 44, height: 44)
+            Spacer()
+        }
+        .padding()
+    }
+}
+
+struct ExternalDisplayContentView: View {
+    let game: String
+    @ObservedObject var webViewModel: WebViewModel
+    var body: some View {
+        NESWebView(game: game, webViewModel: webViewModel)
+            .edgesIgnoringSafeArea(.all)
+    }
+}
+
+class ExternalDisplayManager: ObservableObject {
+    @Published var externalScreenConnected: Bool = false
+    var externalWindow: UIWindow?
+    let game: String
+    let webViewModel: WebViewModel
+    init(game: String, webViewModel: WebViewModel) {
+        self.game = game
+        self.webViewModel = webViewModel
+        NotificationCenter.default.addObserver(self, selector: #selector(screenDidConnect(notification:)), name: UIScreen.didConnectNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(screenDidDisconnect(notification:)), name: UIScreen.didDisconnectNotification, object: nil)
+        updateScreenStatus()
+    }
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    func updateScreenStatus() {
+        let hasExternal = UIScreen.screens.count > 1
+        DispatchQueue.main.async {
+            self.externalScreenConnected = hasExternal
+            if hasExternal {
+                if let externalScreen = UIScreen.screens.last, self.externalWindow == nil {
+                    self.externalWindow = UIWindow(frame: externalScreen.bounds)
+                    self.externalWindow?.screen = externalScreen
+                    let externalView = ExternalDisplayContentView(game: self.game, webViewModel: self.webViewModel)
+                    self.externalWindow?.rootViewController = UIHostingController(rootView: externalView)
+                    self.externalWindow?.isHidden = false
+                }
+            } else {
+                self.externalWindow?.isHidden = true
+                self.externalWindow = nil
+            }
+        }
+    }
+    @objc func screenDidConnect(notification: Notification) {
+        updateScreenStatus()
+    }
+    @objc func screenDidDisconnect(notification: Notification) {
+        updateScreenStatus()
+    }
+}
 
 struct EmulatorView: View {
     let game: String
-    @StateObject private var webViewModel = WebViewModel()
+    @StateObject private var webViewModel: WebViewModel
+    @StateObject private var externalDisplayManager: ExternalDisplayManager
     @Environment(\.dismiss) private var dismiss
     @AppStorage("isAutoSprintEnabled") private var isAutoSprintEnabled = false
     @AppStorage("isHapticFeedbackEnabled") private var isHapticFeedbackEnabled = false
@@ -37,7 +113,7 @@ struct EmulatorView: View {
     @State private var webViewRecoveryAttempts = 0
     private let maxRecoveryAttempts = 3
     private let recoveryTimeout = 5.0
-
+    @State private var showAirPlaySheet = false
     @State private var customButtonsPortrait: [CustomButton] = [
         CustomButton(label: "Up", keyCode: 38, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.12, width: 60, height: 60),
         CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
@@ -49,7 +125,6 @@ struct EmulatorView: View {
         CustomButton(label: "Select", keyCode: 83, x: UIScreen.main.bounds.width * 0.40, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
         CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
     ]
-    
     @State private var customButtonsLandscape: [CustomButton] = {
         let landscapeWidth = max(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
         let landscapeHeight = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
@@ -65,11 +140,9 @@ struct EmulatorView: View {
             CustomButton(label: "Reset", keyCode: 82, x: landscapeWidth * 0.50, y: landscapeHeight * 0.04, width: 60, height: 60)
         ]
     }()
-    
     @State private var importedPNGDataLandscape: Data? = nil
     @State private var importedPNGDataPortrait: Data? = nil
     @State private var activePresses = Set<Int>()
-    
     @State private var reloadID = UUID()
     
     private var appDelegate: AppDelegate? {
@@ -78,6 +151,13 @@ struct EmulatorView: View {
     private let appVersion: String = {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }()
+    
+    init(game: String) {
+        self.game = game
+        let webVM = WebViewModel()
+        _webViewModel = StateObject(wrappedValue: webVM)
+        _externalDisplayManager = StateObject(wrappedValue: ExternalDisplayManager(game: game, webViewModel: webVM))
+    }
     
     var body: some View {
         Group {
@@ -90,8 +170,14 @@ struct EmulatorView: View {
                         let pngDataToUse = isPortrait ? importedPNGDataPortrait : importedPNGDataLandscape
                         if isPortrait {
                             VStack(spacing: 0) {
-                                NESWebView(game: game, webViewModel: webViewModel)
-                                    .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
+                                if externalDisplayManager.externalScreenConnected {
+                                    Text("Emulator output is on the TV")
+                                        .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
+                                        .foregroundColor(.white)
+                                } else {
+                                    NESWebView(game: game, webViewModel: webViewModel)
+                                        .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
+                                }
                                 PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
                                            releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
                                            isEditing: isEditingLayout,
@@ -102,8 +188,12 @@ struct EmulatorView: View {
                             }
                         } else {
                             ZStack {
-                                NESWebView(game: game, webViewModel: webViewModel)
-                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                if externalDisplayManager.externalScreenConnected {
+                                    Color.black
+                                } else {
+                                    NESWebView(game: game, webViewModel: webViewModel)
+                                        .frame(width: geometry.size.width, height: geometry.size.height)
+                                }
                                 PNGOverlay(pressHandler: { keyCode in onScreenPress(keyCode: keyCode) },
                                            releaseHandler: { keyCode in onScreenRelease(keyCode: keyCode) },
                                            isEditing: isEditingLayout,
@@ -151,6 +241,11 @@ struct EmulatorView: View {
                                 Toggle(isOn: $isAutoSprintEnabled) { Label("Auto Sprint", systemImage: "hare.fill") }
                                     .onChange(of: isAutoSprintEnabled) { enabled in handleAutoSprintToggle(enabled: enabled) }
                                 Toggle(isOn: $isHapticFeedbackEnabled) { Label("Haptic Feedback", systemImage: "waveform.path.ecg") }
+                                Button {
+                                    showAirPlaySheet = true
+                                } label: {
+                                    Label("AirPlay", systemImage: "airplayvideo")
+                                }
                             }
                             Menu("Layout") {
                                 Button {
@@ -197,6 +292,9 @@ struct EmulatorView: View {
                                 .font(.system(size: 22, weight: .bold))
                         }
                     }
+                }
+                .sheet(isPresented: $showAirPlaySheet) {
+                    AirPlaySheetView()
                 }
                 .alert("Reset Layout", isPresented: $showResetLayoutConfirmation) {
                     Button("Cancel", role: .cancel) {}
@@ -257,24 +355,18 @@ struct EmulatorView: View {
     
     private func forceReloadWebView() {
         webViewRecoveryAttempts = 0
-        
         webViewModel.webView.stopLoading()
         if let websiteDataTypes = NSSet(array: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache]) as? Set<String> {
-            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes,
-                                                      modifiedSince: Date(timeIntervalSince1970: 0),
-                                                      completionHandler: {})
+            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes, modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {})
         }
-        
         appDelegate?.restartServer()
         startRecoveryCheck()
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
                 let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
                 webViewModel.webView.load(request)
             }
         }
-        
         reloadID = UUID()
     }
     
@@ -298,21 +390,13 @@ struct EmulatorView: View {
     
     private func handleFailedRecovery() {
         webViewRecoveryAttempts += 1
-        
         if webViewRecoveryAttempts < maxRecoveryAttempts {
             forceReloadWebView()
         } else {
             webViewRecoveryAttempts = 0
-            
-            let alertController = UIAlertController(
-                title: "Recovery Failed",
-                message: "The emulator couldn't recover from a white screen error. Please try restarting the app.",
-                preferredStyle: .alert
-            )
+            let alertController = UIAlertController(title: "Recovery Failed", message: "The emulator couldn't recover from a white screen error. Please try restarting the app.", preferredStyle: .alert)
             alertController.addAction(UIAlertAction(title: "OK", style: .default))
-            
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let viewController = windowScene.windows.first?.rootViewController {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, let viewController = windowScene.windows.first?.rootViewController {
                 viewController.present(alertController, animated: true)
             }
         }
@@ -362,8 +446,7 @@ struct EmulatorView: View {
     }
     
     private func saveCurrentOrientationLayout() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, let window = windowScene.windows.first else { return }
         let size = window.bounds.size
         let isPortrait = size.height > size.width
         if isPortrait {
@@ -374,8 +457,7 @@ struct EmulatorView: View {
     }
     
     private func resetToDefaultLayoutCurrent() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, let window = windowScene.windows.first else { return }
         let size = window.bounds.size
         let isPortrait = size.height > size.width
         if isPortrait {
@@ -607,7 +689,7 @@ struct EmulatorView: View {
         dismiss()
     }
 }
-
+ 
 struct CreditsView: View {
     @Environment(\.dismiss) var dismiss
     var body: some View {
@@ -678,15 +760,13 @@ struct CreditsView: View {
         }
     }
 }
-
+ 
 struct NESWebView: UIViewRepresentable {
     let game: String
     @ObservedObject var webViewModel: WebViewModel
-    
     private var appDelegate: AppDelegate? {
         UIApplication.shared.delegate as? AppDelegate
     }
-    
     func makeUIView(context: Context) -> WKWebView {
         let w = webViewModel.webView
         if w.url == nil {
@@ -694,20 +774,17 @@ struct NESWebView: UIViewRepresentable {
         }
         return w
     }
-    
     func updateUIView(_ uiView: WKWebView, context: Context) {
         if let currentURL = uiView.url?.absoluteString,
            !currentURL.contains("rom=\(game)") {
             restartServerAndLoadGame(webView: uiView)
         }
     }
-    
     private func loadGame(webView: WKWebView) {
         if let url = URL(string: "http://127.0.0.1:8080/index.html?rom=\(game)") {
             webView.load(URLRequest(url: url))
         }
     }
-    
     private func restartServerAndLoadGame(webView: WKWebView) {
         webView.stopLoading()
         appDelegate?.restartServer()
@@ -716,11 +793,11 @@ struct NESWebView: UIViewRepresentable {
         }
     }
 }
-
+ 
 class WebViewModel: ObservableObject {
     @Published var webView: WKWebView = WKWebView()
 }
-
+ 
 struct CustomButton: Identifiable, Codable {
     let id: UUID
     let label: String
@@ -739,7 +816,7 @@ struct CustomButton: Identifiable, Codable {
         self.height = height
     }
 }
-
+ 
 struct DraggableButtonAreaView: View {
     @Binding var button: CustomButton
     let isEditing: Bool
@@ -812,7 +889,7 @@ struct DraggableButtonAreaView: View {
         }
     }
 }
-
+ 
 struct PNGOverlay: View {
     let pressHandler: (Int) -> Void
     let releaseHandler: (Int) -> Void
@@ -821,7 +898,6 @@ struct PNGOverlay: View {
     let importedPNGData: Data?
     let isPortrait: Bool
     @AppStorage("isSkinVisible") private var isSkinVisible = true
-
     var body: some View {
         GeometryReader { g in
             let s = g.size
@@ -859,14 +935,9 @@ struct PNGOverlay: View {
                     }
                 }
                 ForEach($buttons) { $btn in
-                    DraggableButtonAreaView(button: $btn,
-                                            isEditing: isEditing,
-                                            screenSize: s,
-                                            pressHandler: pressHandler,
-                                            releaseHandler: releaseHandler)
+                    DraggableButtonAreaView(button: $btn, isEditing: isEditing, screenSize: s, pressHandler: pressHandler, releaseHandler: releaseHandler)
                 }
             }
         }
     }
 }
-
