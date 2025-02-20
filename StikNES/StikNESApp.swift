@@ -106,7 +106,7 @@ class AppStatusChecker: ObservableObject {
     @Published var isNetworkConnected: Bool = false
     @Published var errorMessage: String?
 
-    private let url = URL(string: "https://stiknes.com/status-beta.json")!
+    private let url = URL(string: "https://stiknes.com/status-2.json")!
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue.global(qos: .background)
 

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ZIPFoundation
 
 struct Game: Identifiable, Hashable, Codable {
     let id: UUID
@@ -51,9 +52,8 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black
-                    .ignoresSafeArea()
-
+                Color.black.ignoresSafeArea()
+                
                 if importedGames.isEmpty {
                     VStack(spacing: 16) {
                         Image(systemName: "gamecontroller")
@@ -61,18 +61,18 @@ struct ContentView: View {
                             .scaledToFit()
                             .frame(width: 100, height: 100)
                             .foregroundColor(.blue.opacity(0.8))
-
+                        
                         Text("No Games Imported")
                             .font(.title2)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
-
+                        
                         VStack(spacing: 8) {
                             Text("Tap the + button to import your games.")
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 24)
-
+                            
                             Text("""
 After you import and launch your first game, please open the menu, navigate to Layout, and select Customize Layout. This step is necessary to ensure the emulator functions properly.
 """)
@@ -117,7 +117,7 @@ After you import and launch your first game, please open the menu, navigate to L
                         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
                     }
                 }
-
+                
                 if let selectedGame = selectedGame {
                     NavigationLink(
                         destination: EmulatorView(game: selectedGame.name)
@@ -132,7 +132,10 @@ After you import and launch your first game, please open the menu, navigate to L
             }
             .fileImporter(
                 isPresented: $showFileImporter,
-                allowedContentTypes: [.init(filenameExtension: "nes")!],
+                allowedContentTypes: [
+                    .init(filenameExtension: "nes")!,
+                    .init(filenameExtension: "zip")!
+                ],
                 allowsMultipleSelection: false
             ) { result in
                 handleFileImport(result: result)
@@ -184,7 +187,7 @@ After you import and launch your first game, please open the menu, navigate to L
                     .sheet(isPresented: $showSkinManager) {
                         SkinManagerView()
                     }
-
+                    
                     Button(action: {
                         if let url = URL(string: "https://stiknes.com") {
                             UIApplication.shared.open(url)
@@ -195,7 +198,7 @@ After you import and launch your first game, please open the menu, navigate to L
                             .font(.system(size: 24))
                             .foregroundColor(.blue)
                     }
-
+                    
                     Button(action: {
                         showFileImporter = true
                     }) {
@@ -211,9 +214,7 @@ After you import and launch your first game, please open the menu, navigate to L
         .navigationViewStyle(StackNavigationViewStyle())
         .sheet(isPresented: $showImagePicker) {
             ImagePicker { uiImage in
-                guard let uiImage = uiImage else { return }
-                guard var gameToUpdate = gamePendingImage else { return }
-
+                guard let uiImage = uiImage, var gameToUpdate = gamePendingImage else { return }
                 if let data = uiImage.jpegData(compressionQuality: 0.8) {
                     if let index = importedGames.firstIndex(where: { $0.id == gameToUpdate.id }) {
                         importedGames[index].imageData = data
@@ -223,49 +224,68 @@ After you import and launch your first game, please open the menu, navigate to L
             }
         }
     }
-
+    
     private func launchGame(_ game: Game) {
         selectedGame = game
     }
-
+    
     private func handleFileImport(result: Result<[URL], Error>) {
         do {
             let selectedFiles = try result.get()
             guard let selectedFile = selectedFiles.first else { return }
-            guard selectedFile.pathExtension.lowercased() == "nes" else { return }
-
+            
             guard selectedFile.startAccessingSecurityScopedResource() else { return }
             defer { selectedFile.stopAccessingSecurityScopedResource() }
-
-            let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
-            let destinationURL = emulatorPath.appendingPathComponent(selectedFile.lastPathComponent)
-
+            
             let fileManager = FileManager.default
-            if !fileManager.fileExists(atPath: emulatorPath.path) {
-                try fileManager.createDirectory(at: emulatorPath, withIntermediateDirectories: true)
+            if selectedFile.pathExtension.lowercased() == "zip" {
+                let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+                let unzipDirectory = tempDirectory.appendingPathComponent(UUID().uuidString)
+                try fileManager.createDirectory(at: unzipDirectory, withIntermediateDirectories: true)
+                
+                try fileManager.unzipItem(at: selectedFile, to: unzipDirectory)
+                
+                let nesFiles = try fileManager.contentsOfDirectory(at: unzipDirectory, includingPropertiesForKeys: nil)
+                    .filter { $0.pathExtension.lowercased() == "nes" }
+                
+                for nesFile in nesFiles {
+                    try importNESFile(nesFile)
+                }
+            } else if selectedFile.pathExtension.lowercased() == "nes" {
+                try importNESFile(selectedFile)
             }
-
-            if fileManager.fileExists(atPath: destinationURL.path) {
-                try fileManager.removeItem(at: destinationURL)
-            }
-            try fileManager.copyItem(at: selectedFile, to: destinationURL)
-
-            let game = Game(name: selectedFile.lastPathComponent)
-            importedGames.append(game)
-            saveImportedGames()
         } catch {
             print("Failed to import file: \(error)")
         }
     }
-
+    
+    private func importNESFile(_ fileURL: URL) throws {
+        let fileManager = FileManager.default
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+        let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
+        
+        if !fileManager.fileExists(atPath: emulatorPath.path) {
+            try fileManager.createDirectory(at: emulatorPath, withIntermediateDirectories: true)
+        }
+        
+        let destinationURL = emulatorPath.appendingPathComponent(fileURL.lastPathComponent)
+        if fileManager.fileExists(atPath: destinationURL.path) {
+            try fileManager.removeItem(at: destinationURL)
+        }
+        try fileManager.copyItem(at: fileURL, to: destinationURL)
+        
+        let game = Game(name: fileURL.lastPathComponent)
+        importedGames.append(game)
+        saveImportedGames()
+    }
+    
     private func deleteGame(_ game: Game) {
         if let index = importedGames.firstIndex(where: { $0.id == game.id }) {
             importedGames.remove(at: index)
             saveImportedGames()
         }
     }
-
+    
     private func saveImportedGames() {
         do {
             let data = try JSONEncoder().encode(importedGames)
@@ -274,7 +294,7 @@ After you import and launch your first game, please open the menu, navigate to L
             print("Failed to save imported games: \(error)")
         }
     }
-
+    
     private func loadImportedGames() {
         guard let data = UserDefaults.standard.data(forKey: "importedGames") else { return }
         do {
@@ -310,7 +330,6 @@ struct GameCardView: View {
                         .foregroundColor(.white)
                 }
             }
-
             Text((game.name as NSString).deletingPathExtension)
                 .font(.headline)
                 .foregroundColor(.white)
@@ -329,7 +348,6 @@ struct GameCardView: View {
             } label: {
                 Label("Set Photo", systemImage: "photo")
             }
-
             Button(role: .destructive) {
                 onDelete()
             } label: {

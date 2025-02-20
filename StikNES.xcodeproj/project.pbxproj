@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DC2BF0C82D4EBE4A00296A55 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = DC2BF0C72D4EBE4A00296A55 /* Vapor */; };
+		DC4E8DD52D66E25C009DF43A /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = DC4E8DD42D66E25C009DF43A /* ZIPFoundation */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC2BF0C82D4EBE4A00296A55 /* Vapor in Frameworks */,
+				DC4E8DD52D66E25C009DF43A /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +134,7 @@
 			name = StikNES;
 			packageProductDependencies = (
 				DC2BF0C72D4EBE4A00296A55 /* Vapor */,
+				DC4E8DD42D66E25C009DF43A /* ZIPFoundation */,
 			);
 			productName = StikNES;
 			productReference = DCBB133D2D225B2400A1721A /* StikNES.app */;
@@ -214,6 +217,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				DC2BF0C62D4EBE4A00296A55 /* XCRemoteSwiftPackageReference "vapor" */,
+				DC4E8DD32D66E25C009DF43A /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DCBB133E2D225B2400A1721A /* Products */;
@@ -415,7 +419,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StikNES/StikNES.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 42;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = SZ977XLF24;
 				ENABLE_PREVIEWS = YES;
@@ -433,7 +437,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.0;
+				MARKETING_VERSION = 5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
@@ -453,7 +457,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StikNES/StikNES.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 42;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = SZ977XLF24;
 				ENABLE_PREVIEWS = YES;
@@ -471,7 +475,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.0;
+				MARKETING_VERSION = 5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stik.StikNES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
@@ -606,6 +610,14 @@
 				minimumVersion = 4.112.0;
 			};
 		};
+		DC4E8DD32D66E25C009DF43A /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -613,6 +625,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DC2BF0C62D4EBE4A00296A55 /* XCRemoteSwiftPackageReference "vapor" */;
 			productName = Vapor;
+		};
+		DC4E8DD42D66E25C009DF43A /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DC4E8DD32D66E25C009DF43A /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

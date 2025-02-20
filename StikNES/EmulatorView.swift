@@ -621,11 +621,11 @@ struct CreditsView: View {
                             .padding(.vertical, 4)
                     }
                     Section(header: Text("Open Source Projects").font(.headline)) {
-                        Link(destination: URL(string: "https://github.com/httpswift/swifter")!) {
+                        Link(destination: URL(string: "https://github.com/vapor/vapor")!) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Swifter").font(.body)
-                                    Text("BSD-3-Clause License").font(.caption).foregroundColor(.secondary)
+                                    Text("Vapor").font(.body)
+                                    Text("MIT License").font(.caption).foregroundColor(.secondary)
                                 }
                                 Spacer()
                                 Image(systemName: "arrow.up.right.square").foregroundColor(.blue)
@@ -636,6 +636,17 @@ struct CreditsView: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("NES Rust").font(.body)
+                                    Text("MIT License").font(.caption).foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right.square").foregroundColor(.blue)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        Link(destination: URL(string: "https://github.com/weichsel/ZIPFoundation")!) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("ZIP Foundation").font(.body)
                                     Text("MIT License").font(.caption).foregroundColor(.secondary)
                                 }
                                 Spacer()
