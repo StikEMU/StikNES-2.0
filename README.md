@@ -52,8 +52,9 @@ All **skins remain the property of their original creators**. StikNES does not c
 ### 🔗 **Dependencies & Licensing**
 StikNES uses the following dependencies, which remain under their original licenses:
 
-- **[Swifter](https://github.com/httpswift/swifter)** ([BSD 3-Clause License](https://github.com/httpswift/swifter/blob/master/LICENSE))
+- **[Vapor](https://github.com/vapor/vapor)** ([MIT License](https://github.com/vapor/vapor/blob/main/LICENSE)
 - **[nes-rust](https://github.com/takahirox/nes-rust)** ([MIT License](https://github.com/takahirox/nes-rust/blob/master/LICENSE))
+- **[ZIP Foundation](https://github.com/weichsel/ZIPFoundation)** ([MIT License](https://github.com/weichsel/ZIPFoundation/blob/development/LICENSE))
 
 📜 Full MIT License: [MIT License](https://opensource.org/licenses/MIT)  
 📜 Full BSD License: [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause)
