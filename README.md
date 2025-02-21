@@ -60,7 +60,7 @@ StikNES uses the following dependencies, which remain under their original licen
 ---
 
 ### 🛑 **Exclusive App Store Rights**
-StikNES is **exclusively distributed on the App Store by 0-Blu**. No third party is permitted to publish or distribute StikNES on the App Store without explicit permission.
+StikNES is **exclusively distributed on the App Store, Steam, and Epic Games Store by 0-Blu**. No third party is permitted to publish or distribute StikNES on the these stores without explicit permission.
 
 ---
 
