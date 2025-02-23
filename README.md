@@ -37,7 +37,7 @@ StikNES delivers the classic Nintendo Entertainment System experience through a 
 git clone https://github.com/StikEMU/StikNES-2.0.git
 
 # Navigate to project directory
-cd StikNES-2.0
+cd StikNES
 
 # Open in Xcode
 open StikNES.xcodeproj
