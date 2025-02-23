@@ -1,8 +1,7 @@
 # StikNES
 
 <div align="center">
-
-![StikNES Logo](logo-placeholder.png)
+<img src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/logo.png?raw=true" alt="StikNES Logo" width="130" height="130">
 
 A modern, SwiftUI-based NES emulator for iOS devices that combines elegant design with authentic gameplay.
 
