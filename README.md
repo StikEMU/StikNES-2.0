@@ -30,7 +30,7 @@ StikNES delivers the classic Nintendo Entertainment System experience through a 
 
 ```bash
 # Clone the repository
-git clone https://github.com/StikEMU/StikNES-2.0.git
+git clone https://github.com/StikEMU/StikNES.git
 
 # Navigate to project directory
 cd StikNES
