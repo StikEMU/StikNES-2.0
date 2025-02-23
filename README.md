@@ -3,13 +3,11 @@
 <div align="center">
 <img src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/logo.png?raw=true" alt="StikNES Logo" width="130" height="130">
 
-
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg)]()
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)]()
 
 [Features](#features) • [Installation](#installation) • [License](#license) • [Commercial Use](#commercial-licensing) • [Contact](#contact)
-
 </div>
 
 ## Overview
@@ -48,7 +46,6 @@ StikNES operates under a dual-licensing model:
 ### Open Source License (AGPL-3.0)
 
 For personal, educational, and open-source projects, StikNES is freely available under the GNU Affero General Public License v3 (AGPL-3.0). This license:
-
 - Permits use, modification, and distribution for non-commercial purposes
 - Requires derivative works to be open-sourced under AGPL-3.0
 - Mandates sharing of modifications when the software is used in a network service
