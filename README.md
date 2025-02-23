@@ -3,7 +3,6 @@
 <div align="center">
 <img src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/logo.png?raw=true" alt="StikNES Logo" width="130" height="130">
 
-A modern, SwiftUI-based NES emulator for iOS devices that combines elegant design with authentic gameplay.
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg)]()
