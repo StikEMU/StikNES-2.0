@@ -241,10 +241,10 @@ struct EmulatorView: View {
                                 Toggle(isOn: $isAutoSprintEnabled) { Label("Auto Sprint", systemImage: "hare.fill") }
                                     .onChange(of: isAutoSprintEnabled) { enabled in handleAutoSprintToggle(enabled: enabled) }
                                 Toggle(isOn: $isHapticFeedbackEnabled) { Label("Haptic Feedback", systemImage: "waveform.path.ecg") }
-                                Button {
-                                    showAirPlaySheet = true
-                                } label: {
-                                    Label("AirPlay", systemImage: "airplayvideo")
+                            //    Button {
+                            //        showAirPlaySheet = true
+                             //   } label: {
+                             //       Label("AirPlay", systemImage: "airplayvideo")
                                 }
                             }
                             Menu("Layout") {
