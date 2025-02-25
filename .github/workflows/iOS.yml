@@ -15,32 +15,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set Xcode Version
+      - name: Print Xcode Version and List Installations
         run: |
-          # Use the default Xcode installation available on the runner.
-          # Note: If your project requires a newer Xcode version (e.g. Xcode 15) you'll need a runner with that version.
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          echo "Using Xcode version:"
           xcodebuild -version
+          echo "Listing available Xcode installations:"
+          ls /Applications | grep Xcode
 
-      - name: List available Xcode installations
-        run: ls /Applications | grep Xcode
-
-      - name: List schemes in JSON (diagnostic)
+      - name: Diagnostic – List Schemes
         run: |
-          # This command may fail if the project file format is newer than supported.
           echo "Attempting to list schemes from the project..."
-          xcodebuild -list -json || echo "Failed to list schemes. Your project may use a newer Xcode file format."
+          xcodebuild -list -json || echo "Failed to list schemes. Your project file format may be newer than the runner's Xcode version."
 
       - name: Set Default Scheme
         id: set_scheme
         run: |
-          # Attempt to capture the list of schemes. If xcodebuild fails to read the project,
-          # this step will exit with an error.
+          # Attempt to capture the list of schemes.
+          # This will fail if the project file format is incompatible.
           scheme_list=$(xcodebuild -list -json 2>/dev/null | tr -d "\n")
           if [ -z "$scheme_list" ]; then
             echo "Error: Unable to retrieve schemes. Ensure your project file format is compatible with the runner's Xcode."
             exit 1
           fi
+          # Parse the first available scheme from the JSON output.
           default=$(echo "$scheme_list" | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['schemes'][0]")
           echo "default=${default}" >> $GITHUB_ENV
           echo "Using default scheme: ${default}"
@@ -49,7 +46,7 @@ jobs:
         env:
           scheme: ${{ env.default }}
         run: |
-          # Clean and archive the project for a generic iOS device
+          # Clean and archive the project for a generic iOS device.
           xcodebuild clean archive \
             -scheme "$scheme" \
             -configuration Release \
@@ -60,9 +57,9 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-          # Package the built app into an IPA
+          # Package the built app into an IPA.
           mkdir Payload
-          # IMPORTANT: Adjust "Countdown.app" if your app’s product name differs.
+          # IMPORTANT: Adjust "Countdown.app" to match your actual product name.
           cp -r build/${scheme}.xcarchive/Products/Applications/Countdown.app Payload/
           zip -r "${scheme}.ipa" Payload
           rm -rf Payload
