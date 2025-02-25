@@ -15,44 +15,73 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Print Xcode Version and List Installations
+      - name: Print Available Xcode Versions
         run: |
-          echo "Using Xcode version:"
-          xcodebuild -version
-          echo "Listing available Xcode installations:"
-          ls /Applications | grep Xcode
+          echo "Available Xcode installations:"
+          ls -l /Applications | grep Xcode
+          xcodebuild -version || echo "No default Xcode selected yet"
 
-      - name: Set Xcode Version
+      - name: Set Xcode 15
         run: |
-          # Use the default Xcode installation available on the runner.
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          # Select Xcode 15 (exact path may vary, using a common pattern)
+          XCODE_PATH=$(ls -d /Applications/Xcode_15* | head -n 1)
+          if [ -z "$XCODE_PATH" ]; then
+            echo "Xcode 15 not found!"
+            ls -l /Applications
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          echo "Selected Xcode path: $XCODE_PATH"
           xcodebuild -version
 
-      - name: Build
+      - name: Verify Xcode Tools
+        run: |
+          xcrun --version
+          xcodebuild -showsdks
+
+      - name: Build IPA
         env:
-          scheme: "StikNES"
+          SCHEME: "StikNES"
         run: |
-          echo "Building scheme: $scheme"
-          # Clean and archive the project for a generic iOS device
+          echo "Building scheme: $SCHEME"
+          
+          # Create build directory
+          mkdir -p build
+          
+          # Clean and archive the project
           xcodebuild clean archive \
-            -scheme "$scheme" \
+            -scheme "$SCHEME" \
             -configuration Release \
-            -archivePath "$PWD/build/${scheme}.xcarchive" \
+            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
             -sdk iphoneos \
             -allowProvisioningUpdates \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            || { echo "Build failed"; exit 1; }
 
-          # Package the built app into an IPA
+          # Create IPA
           mkdir Payload
-          cp -r build/${scheme}.xcarchive/Products/Applications/${scheme}.app Payload/
-          zip -r "${scheme}.ipa" Payload
-          rm -rf Payload
+          cp -r "build/${SCHEME}.xcarchive/Products/Applications/${SCHEME}.app" Payload/
+          zip -r "${SCHEME}.ipa" Payload
+          ls -lh "${SCHEME}.ipa"
+          
+          # Cleanup
+          rm -rf Payload build/${SCHEME}.xcarchive
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: "${{ env.scheme }}.ipa"
-          path: "${{ env.scheme }}.ipa"
+          name: "${{ env.SCHEME }}.ipa"
+          path: "${{ env.SCHEME }}.ipa"
           retention-days: 90
+          
+      - name: Verify Upload
+        run: |
+          if [ -f "${{ env.SCHEME }}.ipa" ]; then
+            echo "IPA file exists and was uploaded successfully"
+            ls -lh "${{ env.SCHEME }}.ipa"
+          else
+            echo "IPA file not found!"
+            exit 1
+          fi
