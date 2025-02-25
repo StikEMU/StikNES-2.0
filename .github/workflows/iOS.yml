@@ -1,4 +1,4 @@
-name: Build IPA
+name: Build Unsigned IPA
 
 on:
   push:
@@ -8,70 +8,50 @@ on:
 
 jobs:
   build:
-    name: Build IPA for StikNES
-    runs-on: macos-latest  # Changed from macos-15 to macos-latest
+    name: Build Unsigned IPA
+    runs-on: macos-13
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Xcode
+      - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: '15.2'
 
-      - name: Install Dependencies
+      - name: Install xcpretty
+        run: gem install xcpretty
+
+      - name: Build Unsigned IPA
         run: |
-          gem install xcpretty
-          brew install ldid
-
-      - name: Build IPA
-        env:
-          SCHEME: "StikNES"
-        run: |
-          echo "🚀 Building scheme: $SCHEME"
-
           # Create build directory
           mkdir -p build
 
           # Build for iOS
           xcodebuild clean archive \
             -project StikNES.xcodeproj \
-            -scheme "$SCHEME" \
+            -scheme "StikNES" \
             -configuration Release \
-            -archivePath "build/$SCHEME.xcarchive" \
-            -destination 'generic/platform=iOS' \
-            -allowProvisioningUpdates \
-            CODE_SIGN_IDENTITY=- \
+            -sdk iphoneos \
+            -archivePath "build/StikNES.xcarchive" \
+            CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO | xcpretty
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            | xcpretty
 
           # Create Payload directory
           mkdir -p Payload
-          cp -r "build/$SCHEME.xcarchive/Products/Applications/$SCHEME.app" Payload/
+          cp -r "build/StikNES.xcarchive/Products/Applications/StikNES.app" Payload/
 
           # Create IPA
-          zip -r "build/$SCHEME.ipa" Payload
+          zip -r "build/StikNES.ipa" Payload
           rm -rf Payload
 
-          # Verify IPA exists
-          if [ ! -f "build/$SCHEME.ipa" ]; then
-            echo "❌ Error: IPA file not found!"
-            exit 1
-          fi
-          echo "✅ IPA successfully created: build/$SCHEME.ipa"
-
-      - name: Upload IPA
+      - name: Upload Unsigned IPA
         uses: actions/upload-artifact@v4
         with:
-          name: StikNES.ipa
+          name: StikNES-unsigned.ipa
           path: build/StikNES.ipa
-          retention-days: 90
-
-      - name: Upload Build Logs (if failed)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: xcode-logs
-          path: ~/Library/Developer/Xcode/DerivedData/**/Logs/Build
-          retention-days: 7
+          retention-days: 30
