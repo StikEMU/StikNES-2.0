@@ -14,6 +14,15 @@
 
 StikNES delivers the classic Nintendo Entertainment System experience through a modern, intuitive SwiftUI interface. Built with performance and accuracy in mind, it leverages the power of the `nes-rust` library for authentic emulation while providing a seamless user experience on iOS devices.
 
+
+## Screenshots
+
+| <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/Counter.PNG"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/Counter.PNG"><img alt="Sources" src="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/Counter.PNG" width="200"></picture></p> | <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/ClockTicking.gif"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/ClockTicking.gif"><img alt="Store" src="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/ClockTicking.gif" width="200"></picture></p> | <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/TOC.PNG"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/TOC.PNG"><img alt="Library" src="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/TOC.PNG" width="200"></picture></p> | <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/User%20Agreement.PNG"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/User%20Agreement.PNG"><img alt="Signing" src="https://raw.githubusercontent.com/neoarz/Countdown-App/main/Assets/User%20Agreement.PNG" width="200"></picture></p> |
+|:--:|:--:|:--:|:--:|
+| **Counter** | **Clock Ticking** | **Accept or Decline TOC** | **User Agreement Broken** |
+
+
+
 ## Features
 
 - **Modern SwiftUI Interface**
