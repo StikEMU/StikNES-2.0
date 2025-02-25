@@ -9,27 +9,21 @@ on:
 jobs:
   build:
     name: Build IPA for StikNES
-    runs-on: macos-15  # Ensures the latest macOS version
+    runs-on: macos-latest  # Changed from macos-15 to macos-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set Xcode 16
-        run: |
-          # Find the correct Xcode 16 version dynamically
-          XCODE_PATH=$(ls -d /Applications/Xcode_16* 2>/dev/null | head -n 1)
-          if [ -z "$XCODE_PATH" ]; then
-            echo "❌ Xcode 16 not found! Listing available versions:"
-            ls -l /Applications | grep Xcode
-            exit 1
-          fi
-          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-          echo "✅ Using Xcode at: $XCODE_PATH"
-          xcodebuild -version
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
-      - name: Install xcpretty
-        run: gem install xcpretty
+      - name: Install Dependencies
+        run: |
+          gem install xcpretty
+          brew install ldid
 
       - name: Build IPA
         env:
@@ -40,29 +34,32 @@ jobs:
           # Create build directory
           mkdir -p build
 
-          # Clean and archive the project with reduced logging
+          # Build for iOS
           xcodebuild clean archive \
+            -project StikNES.xcodeproj \
             -scheme "$SCHEME" \
             -configuration Release \
-            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
-            -sdk iphoneos \
+            -archivePath "build/$SCHEME.xcarchive" \
+            -destination 'generic/platform=iOS' \
             -allowProvisioningUpdates \
-            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_IDENTITY=- \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO | xcpretty
 
-          # Export IPA from archive
-          xcodebuild -exportArchive \
-            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
-            -exportOptionsPlist <(echo '{ "method": "ad-hoc", "signingStyle": "manual", "signingCertificate": "", "teamID": "" }') \
-            -exportPath "$PWD/build" | xcpretty
+          # Create Payload directory
+          mkdir -p Payload
+          cp -r "build/$SCHEME.xcarchive/Products/Applications/$SCHEME.app" Payload/
 
-          # Ensure the IPA exists before proceeding
-          if [ ! -f "build/${SCHEME}.ipa" ]; then
+          # Create IPA
+          zip -r "build/$SCHEME.ipa" Payload
+          rm -rf Payload
+
+          # Verify IPA exists
+          if [ ! -f "build/$SCHEME.ipa" ]; then
             echo "❌ Error: IPA file not found!"
             exit 1
           fi
-          echo "✅ IPA successfully created: build/${SCHEME}.ipa"
+          echo "✅ IPA successfully created: build/$SCHEME.ipa"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
@@ -71,17 +68,10 @@ jobs:
           path: build/StikNES.ipa
           retention-days: 90
 
-      - name: Compress and Upload Logs (if failed)
-        if: failure()
-        run: |
-          echo "⚠️ Build failed! Compressing logs for debugging..."
-          tar -czf build-logs.tar.gz ~/Library/Logs/DiagnosticReports
-        continue-on-error: true
-
-      - name: Upload Logs
+      - name: Upload Build Logs (if failed)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs
-          path: build-logs.tar.gz
+          name: xcode-logs
+          path: ~/Library/Developer/Xcode/DerivedData/**/Logs/Build
           retention-days: 7
