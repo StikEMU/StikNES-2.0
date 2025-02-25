@@ -1,0 +1,87 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ "iOS" ]
+  pull_request:
+    branches: [ "iOS" ]
+
+jobs:
+  build:
+    name: Build IPA for StikNES
+    runs-on: macos-15  # Ensures the latest macOS version
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Xcode 16
+        run: |
+          # Find the correct Xcode 16 version dynamically
+          XCODE_PATH=$(ls -d /Applications/Xcode_16* 2>/dev/null | head -n 1)
+          if [ -z "$XCODE_PATH" ]; then
+            echo "❌ Xcode 16 not found! Listing available versions:"
+            ls -l /Applications | grep Xcode
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          echo "✅ Using Xcode at: $XCODE_PATH"
+          xcodebuild -version
+
+      - name: Install xcpretty
+        run: gem install xcpretty
+
+      - name: Build IPA
+        env:
+          SCHEME: "StikNES"
+        run: |
+          echo "🚀 Building scheme: $SCHEME"
+
+          # Create build directory
+          mkdir -p build
+
+          # Clean and archive the project with reduced logging
+          xcodebuild clean archive \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
+            -sdk iphoneos \
+            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO | xcpretty
+
+          # Export IPA from archive
+          xcodebuild -exportArchive \
+            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
+            -exportOptionsPlist <(echo '{ "method": "ad-hoc", "signingStyle": "manual", "signingCertificate": "", "teamID": "" }') \
+            -exportPath "$PWD/build" | xcpretty
+
+          # Ensure the IPA exists before proceeding
+          if [ ! -f "build/${SCHEME}.ipa" ]; then
+            echo "❌ Error: IPA file not found!"
+            exit 1
+          fi
+          echo "✅ IPA successfully created: build/${SCHEME}.ipa"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: StikNES.ipa
+          path: build/StikNES.ipa
+          retention-days: 90
+
+      - name: Compress and Upload Logs (if failed)
+        if: failure()
+        run: |
+          echo "⚠️ Build failed! Compressing logs for debugging..."
+          tar -czf build-logs.tar.gz ~/Library/Logs/DiagnosticReports
+        continue-on-error: true
+
+      - name: Upload Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build-logs.tar.gz
+          retention-days: 7
