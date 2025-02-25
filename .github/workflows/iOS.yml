@@ -25,6 +25,17 @@ jobs:
           gem install xcpretty
           gem install cocoapods
 
+      - name: Verify Project Integrity
+        run: |
+          if [ ! -f "StikNES.xcodeproj/project.pbxproj" ]; then
+            echo "Error: Project file not found"
+            exit 1
+          fi
+          if ! grep -q "isa = PBXProject;" "StikNES.xcodeproj/project.pbxproj"; then
+            echo "Error: Project file is corrupted"
+            exit 1
+          fi
+
       - name: Build IPA
         run: |
           # Create build directory
