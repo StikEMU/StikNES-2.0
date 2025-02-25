@@ -2,9 +2,9 @@ name: Build IPA
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "iOS" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "iOS" ]
 
 jobs:
   build:
