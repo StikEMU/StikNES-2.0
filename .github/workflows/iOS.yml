@@ -41,6 +41,9 @@ jobs:
           # Create build directory
           mkdir -p build
 
+          # Clean build folder
+          rm -rf build/*
+          
           # Build for iOS
           xcodebuild clean archive \
             -project StikNES.xcodeproj \
@@ -77,3 +80,12 @@ jobs:
           name: StikNES-unsigned.ipa
           path: build/StikNES.ipa
           retention-days: 90
+
+      - name: Upload Build Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build/*.xcarchive/Logs
+            /Users/runner/Library/Logs/DiagnosticReports
