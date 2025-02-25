@@ -89,4 +89,4 @@ jobs:
           name: build-logs
           path: |
             build/*.xcarchive/Logs
-            /var/folders/**/T/ResultBundle_*.xcresult
+            /Users/runner/Library/Logs/DiagnosticReports
