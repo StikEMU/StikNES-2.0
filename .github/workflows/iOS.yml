@@ -1,4 +1,4 @@
-name: Build IPA
+ name: Build IPA
 
 on:
   push:
@@ -17,15 +17,30 @@ jobs:
 
       - name: Set Xcode Version
         run: |
-          # Use the default Xcode installation on the runner
+          # Use the default Xcode installation available on the runner.
+          # Note: If your project requires a newer Xcode version (e.g. Xcode 15) you'll need a runner with that version.
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
+
+      - name: List available Xcode installations
+        run: ls /Applications | grep Xcode
+
+      - name: List schemes in JSON (diagnostic)
+        run: |
+          # This command may fail if the project file format is newer than supported.
+          echo "Attempting to list schemes from the project..."
+          xcodebuild -list -json || echo "Failed to list schemes. Your project may use a newer Xcode file format."
 
       - name: Set Default Scheme
         id: set_scheme
         run: |
-          # List schemes in JSON and pick the first scheme from the project
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          # Attempt to capture the list of schemes. If xcodebuild fails to read the project,
+          # this step will exit with an error.
+          scheme_list=$(xcodebuild -list -json 2>/dev/null | tr -d "\n")
+          if [ -z "$scheme_list" ]; then
+            echo "Error: Unable to retrieve schemes. Ensure your project file format is compatible with the runner's Xcode."
+            exit 1
+          fi
           default=$(echo "$scheme_list" | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['schemes'][0]")
           echo "default=${default}" >> $GITHUB_ENV
           echo "Using default scheme: ${default}"
@@ -45,9 +60,9 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-          # Create IPA by packaging the app inside a Payload folder
+          # Package the built app into an IPA
           mkdir Payload
-          # Adjust "Countdown.app" if your app’s product name is different
+          # IMPORTANT: Adjust "Countdown.app" if your app’s product name differs.
           cp -r build/${scheme}.xcarchive/Products/Applications/Countdown.app Payload/
           zip -r "${scheme}.ipa" Payload
           rm -rf Payload
