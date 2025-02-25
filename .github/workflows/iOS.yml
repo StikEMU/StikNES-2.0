@@ -1,0 +1,52 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build and Test default scheme using any available iPhone simulator
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set Default Scheme
+        run: |
+          scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
+          echo $default | cat >default
+          echo Using default scheme: $default
+          
+      - name: Build
+        env:
+          scheme: ${{ 'default' }}
+          platform: ${{ 'iOS Simulator' }}
+        run: |
+          # Build for generic iOS device
+          xcodebuild clean archive \
+            -scheme StikNES \
+            -configuration Release \
+            -archivePath $PWD/build/StikNES.xcarchive \
+            -sdk iphoneos \
+            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+          # Create IPA
+          mkdir Payload
+          cp -r build/StikNES.xcarchive/Products/Applications/Countdown.app Payload/
+          zip -r StikNES.ipa Payload
+          rm -rf Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: StikNES.ipa
+          path: StikNES.ipa
+          retention-days: 90
