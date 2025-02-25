@@ -90,7 +90,6 @@ StikNES builds upon these open-source projects:
 
 For commercial licensing inquiries:
 - Discord: BluStik
-- Email: [contact@stiknes.com](mailto:contact@stiknes.com)
 
 ## Legal
 
