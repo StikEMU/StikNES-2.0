@@ -74,7 +74,7 @@ StikNES is exclusively distributed on:
 - Steam
 - Epic Games Store
 
-by 0-Blu. Unauthorized distribution on these platforms is strictly prohibited.
+Unauthorized distribution on other platforms without the owners permission is strictly prohibited.
 
 ## Dependencies
 
