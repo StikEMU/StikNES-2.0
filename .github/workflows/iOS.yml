@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build IPA for StikNES
-    runs-on: macos-latest
+    runs-on: macos-15  # Updated to macOS 15
 
     steps:
       - name: Checkout
@@ -17,7 +17,15 @@ jobs:
 
       - name: Set Xcode 16
         run: |
-          sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+          # Look for Xcode 16 with possible minor version variations
+          XCODE_PATH=$(ls -d /Applications/Xcode_16* | head -n 1)
+          if [ -z "$XCODE_PATH" ]; then
+            echo "Xcode 16 not found! Listing available versions:"
+            ls -l /Applications | grep Xcode
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          echo "Using Xcode at: $XCODE_PATH"
           xcodebuild -version
 
       - name: Build IPA
