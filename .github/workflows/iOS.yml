@@ -1,4 +1,4 @@
-name: Build Unsigned IPA
+name: Build IPA
 
 on:
   push:
@@ -8,84 +8,80 @@ on:
 
 jobs:
   build:
-    name: Build Unsigned IPA
-    runs-on: macos-latest
+    name: Build IPA for StikNES
+    runs-on: macos-15  # Ensures the latest macOS version
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '15.2'
-
-      - name: Install Dependencies
+      - name: Set Xcode 16
         run: |
-          gem install xcpretty
-          gem install cocoapods
-
-      - name: Verify Project Integrity
-        run: |
-          if [ ! -f "StikNES.xcodeproj/project.pbxproj" ]; then
-            echo "Error: Project file not found"
+          # Find the correct Xcode 16 version dynamically
+          XCODE_PATH=$(ls -d /Applications/Xcode_16* 2>/dev/null | head -n 1)
+          if [ -z "$XCODE_PATH" ]; then
+            echo "❌ Xcode 16 not found! Listing available versions:"
+            ls -l /Applications | grep Xcode
             exit 1
           fi
-          if ! grep -q "isa = PBXProject;" "StikNES.xcodeproj/project.pbxproj"; then
-            echo "Error: Project file is corrupted"
-            exit 1
-          fi
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          echo "✅ Using Xcode at: $XCODE_PATH"
+          xcodebuild -version
+
+      - name: Install xcpretty
+        run: gem install xcpretty
 
       - name: Build IPA
+        env:
+          SCHEME: "StikNES"
         run: |
+          echo "🚀 Building scheme: $SCHEME"
+
           # Create build directory
           mkdir -p build
 
-          # Clean build folder
-          rm -rf build/*
-          
-          # Build for iOS
+          # Clean and archive the project with reduced logging
           xcodebuild clean archive \
-            -project StikNES.xcodeproj \
-            -scheme "StikNES" \
+            -scheme "$SCHEME" \
             -configuration Release \
+            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
             -sdk iphoneos \
-            -archivePath "build/StikNES.xcarchive" \
+            -allowProvisioningUpdates \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            DEVELOPMENT_TEAM="" \
-            PRODUCT_BUNDLE_IDENTIFIER="com.stik.StikNES" \
-            | xcpretty
+            CODE_SIGNING_ALLOWED=NO | xcpretty
 
-          # Verify archive exists
-          if [ ! -d "build/StikNES.xcarchive" ]; then
-            echo "Error: Archive not created"
+          # Export IPA from archive
+          xcodebuild -exportArchive \
+            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
+            -exportOptionsPlist <(echo '{ "method": "ad-hoc", "signingStyle": "manual", "signingCertificate": "", "teamID": "" }') \
+            -exportPath "$PWD/build" | xcpretty
+
+          # Ensure the IPA exists before proceeding
+          if [ ! -f "build/${SCHEME}.ipa" ]; then
+            echo "❌ Error: IPA file not found!"
             exit 1
           fi
-
-          # Create Payload directory
-          mkdir -p Payload
-
-          # Copy app to Payload
-          cp -r "build/StikNES.xcarchive/Products/Applications/StikNES.app" Payload/
-
-          # Create IPA
-          zip -r "build/StikNES.ipa" Payload
-          rm -rf Payload
+          echo "✅ IPA successfully created: build/${SCHEME}.ipa"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: StikNES-unsigned.ipa
+          name: StikNES.ipa
           path: build/StikNES.ipa
           retention-days: 90
 
-      - name: Upload Build Logs
+      - name: Compress and Upload Logs (if failed)
+        if: failure()
+        run: |
+          echo "⚠️ Build failed! Compressing logs for debugging..."
+          tar -czf build-logs.tar.gz ~/Library/Logs/DiagnosticReports
+        continue-on-error: true
+
+      - name: Upload Logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: build-logs
-          path: |
-            build/*.xcarchive/Logs
-            /Users/runner/Library/Logs/DiagnosticReports
+          path: build-logs.tar.gz
+          retention-days: 7
