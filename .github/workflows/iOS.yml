@@ -1,6 +1,10 @@
 name: Build Unsigned IPA
 
-
+on:
+  push:
+    branches: [ "iOS" ]
+  pull_request:
+    branches: [ "iOS" ]
 
 jobs:
   build:
