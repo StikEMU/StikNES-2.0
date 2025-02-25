@@ -15,17 +15,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Ensure the runner uses a new enough Xcode version
       - name: Set Xcode Version
         run: |
-          sudo xcode-select -s /Applications/Xcode_14.3.app/Contents/Developer
+          # Use the default Xcode installation on the runner
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
 
-      # Capture the default scheme from the project
       - name: Set Default Scheme
         id: set_scheme
         run: |
-          # List schemes in JSON and pick the first scheme
+          # List schemes in JSON and pick the first scheme from the project
           scheme_list=$(xcodebuild -list -json | tr -d "\n")
           default=$(echo "$scheme_list" | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['schemes'][0]")
           echo "default=${default}" >> $GITHUB_ENV
@@ -35,7 +34,7 @@ jobs:
         env:
           scheme: ${{ env.default }}
         run: |
-          # Build for a generic iOS device
+          # Clean and archive the project for a generic iOS device
           xcodebuild clean archive \
             -scheme "$scheme" \
             -configuration Release \
@@ -46,9 +45,9 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-          # Create IPA
+          # Create IPA by packaging the app inside a Payload folder
           mkdir Payload
-          # Adjust the app name if needed (ensure it matches your built product)
+          # Adjust "Countdown.app" if your app’s product name is different
           cp -r build/${scheme}.xcarchive/Products/Applications/Countdown.app Payload/
           zip -r "${scheme}.ipa" Payload
           rm -rf Payload
