@@ -14,24 +14,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Set Default Scheme
+
+      # Ensure the runner uses a new enough Xcode version
+      - name: Set Xcode Version
         run: |
+          sudo xcode-select -s /Applications/Xcode_14.3.app/Contents/Developer
+          xcodebuild -version
+
+      # Capture the default scheme from the project
+      - name: Set Default Scheme
+        id: set_scheme
+        run: |
+          # List schemes in JSON and pick the first scheme
           scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
-          
+          default=$(echo "$scheme_list" | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['schemes'][0]")
+          echo "default=${default}" >> $GITHUB_ENV
+          echo "Using default scheme: ${default}"
+
       - name: Build
         env:
-          scheme: ${{ 'default' }}
-          platform: ${{ 'iOS Simulator' }}
+          scheme: ${{ env.default }}
         run: |
-          # Build for generic iOS device
+          # Build for a generic iOS device
           xcodebuild clean archive \
-            -scheme StikNES \
+            -scheme "$scheme" \
             -configuration Release \
-            -archivePath $PWD/build/StikNES.xcarchive \
+            -archivePath "$PWD/build/${scheme}.xcarchive" \
             -sdk iphoneos \
             -allowProvisioningUpdates \
             CODE_SIGN_IDENTITY="" \
@@ -40,13 +48,14 @@ jobs:
 
           # Create IPA
           mkdir Payload
-          cp -r build/StikNES.xcarchive/Products/Applications/Countdown.app Payload/
-          zip -r StikNES.ipa Payload
+          # Adjust the app name if needed (ensure it matches your built product)
+          cp -r build/${scheme}.xcarchive/Products/Applications/Countdown.app Payload/
+          zip -r "${scheme}.ipa" Payload
           rm -rf Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: StikNES.ipa
-          path: StikNES.ipa
+          name: "${{ env.default }}.ipa"
+          path: "${{ env.default }}.ipa"
           retention-days: 90
