@@ -20,14 +20,31 @@ jobs:
         with:
           xcode-version: '15.2'
 
-      - name: Install xcpretty
-        run: gem install xcpretty
+      - name: Install Dependencies
+        run: |
+          gem install xcpretty
+          gem install cocoapods
 
-      - name: Build Unsigned IPA
+      - name: Setup Project
+        run: |
+          # Initialize Xcode project if needed
+          if [ ! -f "StikNES.xcodeproj/project.pbxproj" ]; then
+            xcodebuild -create-xcodeproj
+          fi
+          
+          # Update project settings
+          /usr/libexec/PlistBuddy -c "Set :objects:DCBB133C2D225B2400A1721A:buildSettings:CODE_SIGN_IDENTITY ''" StikNES.xcodeproj/project.pbxproj
+          /usr/libexec/PlistBuddy -c "Set :objects:DCBB133C2D225B2400A1721A:buildSettings:CODE_SIGNING_REQUIRED NO" StikNES.xcodeproj/project.pbxproj
+          /usr/libexec/PlistBuddy -c "Set :objects:DCBB133C2D225B2400A1721A:buildSettings:CODE_SIGNING_ALLOWED NO" StikNES.xcodeproj/project.pbxproj
+
+      - name: Build IPA
         run: |
           # Create build directory
           mkdir -p build
 
+          # Clean build folder
+          rm -rf build/*
+          
           # Build for iOS
           xcodebuild clean archive \
             -project StikNES.xcodeproj \
@@ -39,19 +56,37 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" \
+            PRODUCT_BUNDLE_IDENTIFIER="com.stik.StikNES" \
             | xcpretty
+
+          # Verify archive exists
+          if [ ! -d "build/StikNES.xcarchive" ]; then
+            echo "Error: Archive not created"
+            exit 1
+          fi
 
           # Create Payload directory
           mkdir -p Payload
+
+          # Copy app to Payload
           cp -r "build/StikNES.xcarchive/Products/Applications/StikNES.app" Payload/
 
           # Create IPA
           zip -r "build/StikNES.ipa" Payload
           rm -rf Payload
 
-      - name: Upload Unsigned IPA
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: StikNES-unsigned.ipa
           path: build/StikNES.ipa
           retention-days: 30
+
+      - name: Upload Build Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build/*.xcarchive/Logs
+            /var/folders/**/T/ResultBundle_*.xcresult
