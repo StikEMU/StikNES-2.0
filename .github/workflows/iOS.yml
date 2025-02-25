@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build Unsigned IPA
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Repository
@@ -25,26 +25,11 @@ jobs:
           gem install xcpretty
           gem install cocoapods
 
-      - name: Setup Project
-        run: |
-          # Initialize Xcode project if needed
-          if [ ! -f "StikNES.xcodeproj/project.pbxproj" ]; then
-            xcodebuild -create-xcodeproj
-          fi
-          
-          # Update project settings
-          /usr/libexec/PlistBuddy -c "Add :objects:DCBB133C2D225B2400A1721A:buildSettings:CODE_SIGN_IDENTITY string ''" StikNES.xcodeproj/project.pbxproj || true
-          /usr/libexec/PlistBuddy -c "Add :objects:DCBB133C2D225B2400A1721A:buildSettings:CODE_SIGNING_REQUIRED string NO" StikNES.xcodeproj/project.pbxproj || true
-          /usr/libexec/PlistBuddy -c "Add :objects:DCBB133C2D225B2400A1721A:buildSettings:CODE_SIGNING_ALLOWED string NO" StikNES.xcodeproj/project.pbxproj || true
-
       - name: Build IPA
         run: |
           # Create build directory
           mkdir -p build
 
-          # Clean build folder
-          rm -rf build/*
-          
           # Build for iOS
           xcodebuild clean archive \
             -project StikNES.xcodeproj \
@@ -80,13 +65,4 @@ jobs:
         with:
           name: StikNES-unsigned.ipa
           path: build/StikNES.ipa
-          retention-days: 30
-
-      - name: Upload Build Logs
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: |
-            build/*.xcarchive/Logs
-            /Users/runner/Library/Logs/DiagnosticReports
+          retention-days: 90
