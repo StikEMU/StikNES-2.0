@@ -85,7 +85,7 @@ StikNES builds upon these open-source projects:
 | [Vapor](https://github.com/vapor/vapor) | MIT | Backend Services |
 | [nes-rust](https://github.com/takahirox/nes-rust) | MIT | Core Emulation |
 | [ZIP Foundation](https://github.com/weichsel/ZIPFoundation) | MIT | ROM Management |
-| [Ruffle]([https://github.com/vapor/vapor](https://github.com/ruffle-rs/ruffle?tab=License-1-ov-file)) | MIT | Flash Emulation |
+| [Ruffle](https://github.com/ruffle-rs/ruffle) | MIT | Flash Emulation |
 
 
 ## Contact
