@@ -1,73 +1,106 @@
-# **StikNES - SwiftUI NES Emulator**
+# StikNES
 
-StikNES is a SwiftUI-based NES emulator designed for iOS devices. It leverages the power of SwiftUI to deliver a clean, modern interface while emulating the classic NES gaming experience using the `nes-rust` library.
+<div align="center">
+<img src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/logo.png?raw=true" alt="StikNES Logo" width="130" height="130">
 
-## ✨ **Features**
-- **SwiftUI Interface:** Clean and modern design.
-- **NES Emulation:** Powered by the `nes-rust` Rust/WASM library for accurate emulation.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg)]()
+[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)]()
 
-## 🚀 **Getting Started**
+[Features](#features) • [Installation](#installation) • [License](#license) • [Commercial Use](#commercial-licensing) • [Contact](#contact)
+</div>
 
-1. Clone this repository to your local machine.
-   ```bash
-   git clone https://github.com/StikEMU/StikNES-2.0.git
-   ```
-2. Open the project in Xcode.
-3. Build and run on your desired iOS device.
+## Overview
+
+StikNES delivers the classic Nintendo Entertainment System experience through a modern, intuitive SwiftUI interface. Built with performance and accuracy in mind, it leverages the power of the `nes-rust` library for authentic emulation while providing a seamless user experience on iOS devices.
+
+
+## Screenshots
+| <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot1.png?raw=true"><source media="(prefers-color-scheme: light)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot1.png?raw=true"><img alt="Sources" src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot1.png?raw=true" width="200"></picture></p> | <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot2.png?raw=true"><source media="(prefers-color-scheme: light)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot2.png?raw=true"><img alt="Store" src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot2.png?raw=true" width="200"></picture></p> | <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot3.png?raw=true"><source media="(prefers-color-scheme: light)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot3.png?raw=true"><img alt="Library" src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot3.png?raw=true" width="200"></picture></p> | <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot4.png?raw=true"><source media="(prefers-color-scheme: light)" srcset="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot4.png?raw=true"><img alt="Signing" src="https://github.com/StikEMU/StikNES-Site/blob/main/Website/screenshot4.png?raw=true" width="200"></picture></p> |
+|:--:|:--:|:--:|:--:|
+| **Home** | **In Game** | **Game Playing** | **Skins** |
+
+
+
+## Features
+
+- **Modern SwiftUI Interface**
+  - Clean, intuitive design optimized for iOS
+  - Responsive controls with haptic feedback
+  - Custom display configurations
+
+- **High-Performance Emulation**
+  - Powered by the battle-tested `nes-rust` library
+  - Hardware-accelerated rendering
+  - Low-latency input processing
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/StikEMU/StikNES.git
+
+# Navigate to project directory
+cd StikNES
+
+# Open in Xcode
+open StikNES.xcodeproj
+```
+
+## License
+
+StikNES operates under a dual-licensing model:
+
+### Open Source License (AGPL-3.0)
+
+For personal, educational, and open-source projects, StikNES is freely available under the GNU Affero General Public License v3 (AGPL-3.0). This license:
+- Permits use, modification, and distribution for non-commercial purposes
+- Requires derivative works to be open-sourced under AGPL-3.0
+- Mandates sharing of modifications when the software is used in a network service
+
+### Commercial Licensing
+
+For commercial use, including:
+- Proprietary or closed-source applications
+- SaaS implementations
+- Commercial distribution
+
+Please contact us to obtain a commercial license that waives AGPL requirements.
+
+## Distribution Rights
+
+StikNES is exclusively distributed on:
+- Apple App Store
+- Steam
+- Epic Games Store
+
+Unauthorized distribution on other platforms without the owners permission is strictly prohibited.
+
+## Dependencies/Credits
+
+StikNES builds upon these open-source projects:
+
+| Project | License | Usage |
+|---------|---------|-------|
+| [Vapor](https://github.com/vapor/vapor) | MIT | Backend Services |
+| [nes-rust](https://github.com/takahirox/nes-rust) | MIT | Core Emulation |
+| [ZIP Foundation](https://github.com/weichsel/ZIPFoundation) | MIT | ROM Management |
+| [Ruffle](https://github.com/ruffle-rs/ruffle) | MIT | Flash Emulation |
+
+
+## Contact
+
+For commercial licensing inquiries:
+- Discord: BluStik
+
+## Legal
+
+- All emulator skins remain the intellectual property of their respective creators
+- "Nintendo" and "Nintendo Entertainment System" are trademarks of Nintendo Co., Ltd.
+- © 2025 0-Blu. All rights reserved.
 
 ---
 
-## ⚙️ **License Information**
-
-### 🆓 **Option 1: Free for Personal & Open-Source Use (GNU AGPLv3)**
-StikNES is licensed under the **GNU Affero General Public License v3 (AGPL-3.0)** for non-commercial and open-source use.
-
-#### You may:
-- Use, modify, and distribute the software **for personal, educational, or open-source projects**.
-- Contribute to the project under AGPLv3.
-
-However, **if you use this software in a commercial setting, you must open-source your modifications and comply with AGPL-3.0.**
-
-📜 Full AGPLv3 license: [GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
-
----
-
-### 💼 **Option 2: Commercial Use Requires a Paid License**
-For commercial use (e.g., businesses, SaaS, proprietary software), a separate **paid commercial license** is required.
-
-#### Commercial users **must purchase a license** to:
-- Use StikNES in proprietary or closed-source applications.
-- Avoid AGPL’s open-source requirements.
-
-📩 To obtain a commercial license, contact:  
-📧 **BluStik on Discord**  
-
-### 🎨 **Skins Ownership**
-All **skins remain the property of their original creators**. StikNES does not claim ownership over any third-party or user-created skins.
-
----
-
-### 🔗 **Dependencies & Licensing**
-StikNES uses the following dependencies, which remain under their original licenses:
-
-- **[Vapor](https://github.com/vapor/vapor)** ([MIT License](https://github.com/vapor/vapor/blob/main/LICENSE)
-- **[nes-rust](https://github.com/takahirox/nes-rust)** ([MIT License](https://github.com/takahirox/nes-rust/blob/master/LICENSE))
-- **[ZIP Foundation](https://github.com/weichsel/ZIPFoundation)** ([MIT License](https://github.com/weichsel/ZIPFoundation/blob/development/LICENSE))
-
-📜 Full MIT License: [MIT License](https://opensource.org/licenses/MIT)  
-📜 Full BSD License: [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause)
-
----
-
-### 🛑 **Exclusive App Store Rights**
-StikNES is **exclusively distributed on the App Store, Steam, and Epic Games Store by 0-Blu**. No third party is permitted to publish or distribute StikNES on the these stores without explicit permission.
-
----
-
-### ✅ **Summary**
-- **Personal, educational, and open-source use** → Free under AGPLv3  
-- **Business, SaaS, or closed-source use** → Requires a paid license  
-- **App Store distribution is exclusive to 0-Blu**  
-- **Swifter & nes-rust remain under their original open-source licenses**  
-
-**© 2025 0-Blu**
+<div align="center">
+Made with ❤️ by the StikNES Team
+</div>
