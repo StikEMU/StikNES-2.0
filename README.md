@@ -76,7 +76,7 @@ StikNES is exclusively distributed on:
 
 Unauthorized distribution on other platforms without the owners permission is strictly prohibited.
 
-## Dependencies
+## Dependencies/Credits
 
 StikNES builds upon these open-source projects:
 
