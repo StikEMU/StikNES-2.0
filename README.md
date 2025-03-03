@@ -69,12 +69,10 @@ Please contact us to obtain a commercial license that waives AGPL requirements.
 
 ## Distribution Rights
 
-StikNES is exclusively distributed on:
+0-Blu has exclusive distribution rights on the following platforms:
 - Apple App Store
 - Steam
 - Epic Games Store
-
-Unauthorized distribution on other platforms without the owners permission is strictly prohibited.
 
 ## Dependencies/Credits
 
