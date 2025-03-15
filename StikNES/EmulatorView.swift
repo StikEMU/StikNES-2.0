@@ -212,8 +212,8 @@ struct EmulatorView: View {
         CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
         CustomButton(label: "Left", keyCode: 37, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
         CustomButton(label: "Right", keyCode: 39, x: UIScreen.main.bounds.width * 0.39, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
-        CustomButton(label: "A", keyCode: 65, x: UIScreen.main.bounds.width * 0.85, y: UIScreen.main.bounds.height * 0.15, width: 60, height: 60),
-        CustomButton(label: "B", keyCode: 66, x: UIScreen.main.bounds.width * 0.65, y: UIScreen.main.bounds.height * 0.24, width: 60, height: 60),
+        CustomButton(label: "A", keyCode: 65, x: UIScreen.main.bounds.width * 0.82, y: UIScreen.main.bounds.height * 0.189, width: 60, height: 60),
+        CustomButton(label: "B", keyCode: 66, x: UIScreen.main.bounds.width * 0.63, y: UIScreen.main.bounds.height * 0.189, width: 60, height: 60),
         CustomButton(label: "Start", keyCode: 32, x: UIScreen.main.bounds.width * 0.60, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
         CustomButton(label: "Select", keyCode: 83, x: UIScreen.main.bounds.width * 0.40, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
         CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
@@ -770,8 +770,8 @@ struct EmulatorView: View {
                 CustomButton(label: "Down", keyCode: 40, x: UIScreen.main.bounds.width * 0.22, y: UIScreen.main.bounds.height * 0.25, width: 60, height: 60),
                 CustomButton(label: "Left", keyCode: 37, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
                 CustomButton(label: "Right", keyCode: 39, x: UIScreen.main.bounds.width * 0.39, y: UIScreen.main.bounds.height * 0.185, width: 60, height: 60),
-                CustomButton(label: "A", keyCode: 65, x: UIScreen.main.bounds.width * 0.85, y: UIScreen.main.bounds.height * 0.15, width: 60, height: 60),
-                CustomButton(label: "B", keyCode: 66, x: UIScreen.main.bounds.width * 0.65, y: UIScreen.main.bounds.height * 0.24, width: 60, height: 60),
+                CustomButton(label: "A", keyCode: 65, x: UIScreen.main.bounds.width * 0.82, y: UIScreen.main.bounds.height * 0.189, width: 60, height: 60),
+                CustomButton(label: "B", keyCode: 66, x: UIScreen.main.bounds.width * 0.63, y: UIScreen.main.bounds.height * 0.189, width: 60, height: 60),
                 CustomButton(label: "Start", keyCode: 32, x: UIScreen.main.bounds.width * 0.60, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
                 CustomButton(label: "Select", keyCode: 83, x: UIScreen.main.bounds.width * 0.40, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60),
                 CustomButton(label: "Reset", keyCode: 82, x: UIScreen.main.bounds.width * 0.05, y: UIScreen.main.bounds.height * 0.32, width: 60, height: 60)
