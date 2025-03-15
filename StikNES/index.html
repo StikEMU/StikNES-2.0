@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -5,55 +6,57 @@
       body {
         background-color: #000;
         margin: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
         overflow: hidden;
       }
-      canvas {
+      /* NES emulator canvas styling */
+      #nesCanvas {
+        display: none;
         background: #000;
         border-radius: 10px;
-        width: auto;
-        height: auto;
         max-width: 100%;
         max-height: 100%;
-        aspect-ratio: 256 / 240; /* Maintain NES aspect ratio */
+        /* The actual size is set dynamically via JavaScript */
+      }
+      /* Ruffle container styling */
+      #ruffleContainer {
+        display: none;
+        background: #000;
       }
     </style>
+    <!-- Load Ruffle from unpkg -->
+    <script src="ruffle.js"></script>
   </head>
   <body>
+    <!-- NES emulator canvas -->
     <canvas id="nesCanvas" width="256" height="240"></canvas>
+    <!-- Ruffle container for SWF files -->
+    <div id="ruffleContainer"></div>
 
     <script type="module">
       import init, { WasmNes, Button } from './nes_rust_wasm.js';
 
-      let nes;         // We'll store the NES instance here.
-      let audioEnabled = false; // Track whether audio has been enabled.
+      let nes; // Will hold the NES instance.
+      let audioEnabled = false; // Flag to track audio enabling.
+      let flashMode = false; // Flag to indicate Flash mode (SWF).
 
-      // Called once the user presses any key, enabling audio in Safari.
+      // Called on the first key press to enable audio in browsers like Safari.
       function enableAudio() {
         try {
-          // If audio is already enabled, do nothing.
           if (audioEnabled) return;
           audioEnabled = true;
-
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           if (!AudioContext) {
             throw new Error("AudioContext is not supported in this browser.");
           }
-
           const context = new AudioContext({ sampleRate: 44100 });
           const scriptProcessor = context.createScriptProcessor(4096, 0, 1);
-
           scriptProcessor.onaudioprocess = (e) => {
             const data = e.outputBuffer.getChannelData(0);
             nes.update_sample_buffer(data);
             for (let i = 0; i < data.length; i++) {
-              data[i] *= 0.25; // Reduce volume
+              data[i] *= 0.25; // Lower the volume.
             }
           };
-
           scriptProcessor.connect(context.destination);
           console.log("Audio has been enabled.");
         } catch (error) {
@@ -61,33 +64,30 @@
         }
       }
 
-      // Handle any key press to enable audio.
-      // After audio is enabled once, remove the event listener.
+      // Enable audio on first key press.
       function handleAnyKeyPress() {
         enableAudio();
         window.removeEventListener('keydown', handleAnyKeyPress);
       }
-
       window.addEventListener('keydown', handleAnyKeyPress);
 
-      // Returns the value of a URL query parameter, or null if not found.
+      // Returns the value of a URL query parameter or null if not found.
       function getQueryParameter(param) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
       }
 
-      // Main function that loads and runs the emulator.
-      async function run(romPath) {
+      // Run the NES emulator.
+      async function runNES(romPath) {
         try {
           const wasm = await init();
           const canvas = document.getElementById("nesCanvas");
+          canvas.style.display = "block"; // Show NES canvas.
           const ctx = canvas.getContext("2d");
           const imageData = ctx.createImageData(256, 240);
           const pixels = new Uint8Array(imageData.data.buffer);
+          nes = WasmNes.new();
 
-          nes = WasmNes.new(); // Create the emulator instance
-
-          // Load the ROM
           const response = await fetch(romPath);
           if (!response.ok) {
             throw new Error(`Failed to load ROM from ${romPath}`);
@@ -96,18 +96,18 @@
           nes.set_rom(new Uint8Array(rom));
           nes.bootup();
 
-          // Setup keyboard handlers for NES controls
+          // Map key codes to NES buttons.
           const getButton = (keyCode) => {
             switch (keyCode) {
-              case 32: return Button.Start;       // Space
-              case 37: return Button.Joypad1Left; // Left
-              case 38: return Button.Joypad1Up;   // Up
-              case 39: return Button.Joypad1Right;// Right
-              case 40: return Button.Joypad1Down; // Down
-              case 65: return Button.Joypad1A;    // A
-              case 66: return Button.Joypad1B;    // B
-              case 83: return Button.Select;      // S
-              case 82: return Button.Reset;       // R
+              case 32: return Button.Start;       // Space.
+              case 37: return Button.Joypad1Left;   // Left arrow.
+              case 38: return Button.Joypad1Up;     // Up arrow.
+              case 39: return Button.Joypad1Right;  // Right arrow.
+              case 40: return Button.Joypad1Down;   // Down arrow.
+              case 65: return Button.Joypad1A;      // A key.
+              case 66: return Button.Joypad1B;      // B key.
+              case 83: return Button.Select;        // S key.
+              case 82: return Button.Reset;         // R key.
               default: return null;
             }
           };
@@ -119,7 +119,6 @@
               event.preventDefault();
             }
           });
-
           window.addEventListener("keyup", (event) => {
             const button = getButton(event.keyCode);
             if (button !== null) {
@@ -128,7 +127,7 @@
             }
           });
 
-          // Main loop
+          // Main emulation loop.
           const stepFrame = () => {
             requestAnimationFrame(stepFrame);
             nes.step_frame();
@@ -137,34 +136,72 @@
           };
           stepFrame();
         } catch (error) {
-          console.error(`Emulator error: ${error.message}`);
+          console.error(`NES Emulator error: ${error.message}`);
         }
       }
 
-      // On page load, we check if a ROM is specified and run it
+      // Run the Ruffle player for SWF (Flash) files.
+      async function runSWF(romPath) {
+        try {
+          flashMode = true;
+          const container = document.getElementById("ruffleContainer");
+          container.style.display = "block"; // Show Ruffle container.
+          container.innerHTML = ""; // Clear any existing content.
+
+          // Create a new Ruffle player.
+          const ruffle = window.RufflePlayer.newest();
+          const player = ruffle.createPlayer();
+          player.style.width = "100%";
+          player.style.height = "100%";
+          container.appendChild(player);
+
+          // Load the SWF file.
+          player.load(romPath);
+        } catch (error) {
+          console.error(`Ruffle error: ${error.message}`);
+        }
+      }
+
+      // Resize the active emulator element.
+      function resizeEmulator() {
+        if (flashMode) {
+          // Flash mode: fill the entire screen.
+          const container = document.getElementById("ruffleContainer");
+          container.style.width = window.innerWidth + "px";
+          container.style.height = window.innerHeight + "px";
+        } else {
+          // NES mode: use the original NES screen size code.
+          const canvas = document.getElementById("nesCanvas");
+          const aspectRatio = 256 / 240;
+          const maxWidth = window.innerWidth;
+          const maxHeight = window.innerHeight;
+          if (maxWidth / aspectRatio < maxHeight) {
+            canvas.style.width = `${maxWidth}px`;
+            canvas.style.height = `${maxWidth / aspectRatio}px`;
+          } else {
+            canvas.style.width = `${maxHeight * aspectRatio}px`;
+            canvas.style.height = `${maxHeight}px`;
+          }
+        }
+      }
+      window.addEventListener("resize", resizeEmulator);
+      window.addEventListener("load", resizeEmulator);
+
+      // Determine which emulator to run based on the ROM's file extension.
       const romPath = getQueryParameter("rom");
       if (romPath) {
-        run(romPath);
-      }
-
-      // Resizes the canvas while maintaining NES aspect ratio
-      function resizeCanvas() {
-        const canvas = document.getElementById("nesCanvas");
-        const aspectRatio = 256 / 240;
-        const maxWidth = window.innerWidth;
-        const maxHeight = window.innerHeight;
-
-        if (maxWidth / aspectRatio < maxHeight) {
-          canvas.style.width = `${maxWidth}px`;
-          canvas.style.height = `${maxWidth / aspectRatio}px`;
+        const extension = romPath.split('.').pop().toLowerCase();
+        if (extension === "nes") {
+          runNES(romPath);
+        } else if (extension === "swf") {
+          runSWF(romPath);
         } else {
-          canvas.style.width = `${maxHeight * aspectRatio}px`;
-          canvas.style.height = `${maxHeight}px`;
+          console.error("Unsupported ROM file type.");
         }
+      } else {
+        console.error("No ROM specified in query parameters.");
       }
-
-      window.addEventListener("resize", resizeCanvas);
-      window.addEventListener("load", resizeCanvas);
     </script>
   </body>
 </html>
+

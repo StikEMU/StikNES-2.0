@@ -15,6 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private var app: Application?
     private var emulatorDirectory: URL?
     private let logger = Logger(label: "com.emulator.server")
+    private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
     private enum ServerState {
         case notRunning
@@ -54,7 +55,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 attributes: [.posixPermissions: 0o755]
             )
             
-            let emulatorFiles = ["index.html", "nes_rust_wasm.js", "nes_rust_wasm_bg.wasm"]
+            let emulatorFiles = ["index.html", "nes_rust_wasm.js", "nes_rust_wasm_bg.wasm", "ruffle.js", "1536bdedaf9e25772a09.wasm", "b4f51fad6e7438b66f8b.wasm", "core.ruffle.4f87b096b4318ab30d75.js", "core.ruffle.ece9872799c9441f1081.js"]
             
             for fileName in emulatorFiles {
                 guard let bundleURL = Bundle.main.url(forResource: fileName, withExtension: nil) else {
@@ -71,6 +72,44 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             logger.info("Emulator files prepared at \(emulatorPath.path)")
         } catch {
             logger.error("Emulator file setup failed: \(error)")
+        }
+    }
+    
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        logger.info("App entered background")
+        beginBackgroundTask()
+    }
+    
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        logger.info("App will enter foreground")
+        endBackgroundTask()
+        if currentServerState == .notRunning {
+            restartServer()
+        }
+    }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        logger.info("App will terminate")
+        stopServer()
+        endBackgroundTask()
+    }
+    
+    private func beginBackgroundTask() {
+        if backgroundTask == .invalid {
+            backgroundTask = UIApplication.shared.beginBackgroundTask { [weak self] in
+                self?.logger.info("Background task expired")
+                self?.stopServer()
+                self?.endBackgroundTask()
+            }
+            logger.info("Background task started")
+        }
+    }
+    
+    private func endBackgroundTask() {
+        if backgroundTask != .invalid {
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+            logger.info("Background task ended")
         }
     }
     
@@ -105,12 +144,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             if let error = error {
                 self?.logger.error("Server restart verification failed: \(error.localizedDescription)")
                 self?.currentServerState = .notRunning
+                self?.restartServer() // Attempt restart on failure
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 self?.logger.warning("Server restart verification returned unexpected status")
                 self?.currentServerState = .notRunning
+                self?.restartServer() // Attempt restart on failure
                 return
             }
             
@@ -141,6 +182,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             app.middleware.use(IPRestrictionMiddleware())
             app.middleware.use(FileMiddleware(publicDirectory: emulatorDirectory.path))
             
+            // Serve the index page at the root
             app.get { req in
                 let indexPath = emulatorDirectory.appendingPathComponent("index.html").path
                 do {
@@ -151,12 +193,64 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
             
+            // Serve any file requested under the emulator directory
             app.get("/*") { req -> Response in
                 let filePath = emulatorDirectory.appendingPathComponent(req.url.path).path
                 guard FileManager.default.fileExists(atPath: filePath) else {
                     return Response(status: .notFound, body: .init(string: "File not found"))
                 }
                 return req.fileio.streamFile(at: filePath)
+            }
+            
+            // New route to select the emulator core based on file type
+            app.get("play") { req -> Response in
+                guard let fileName = req.query["file"] as String? else {
+                    return Response(status: .badRequest, body: .init(string: "Missing 'file' query parameter"))
+                }
+                
+                let fileExtension = URL(fileURLWithPath: fileName).pathExtension.lowercased()
+                var htmlContent: String
+                
+                switch fileExtension {
+                case "swf":
+                    htmlContent = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <title>Ruffle Emulator</title>
+                      <script src="ruffle_core.js"></script>
+                    </head>
+                    <body>
+                      <object data="\(fileName)" type="application/x-shockwave-flash">
+                        Your browser does not support Flash.
+                      </object>
+                    </body>
+                    </html>
+                    """
+                case "nes":
+                    htmlContent = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <title>NES Emulator</title>
+                      <script src="nes_rust_wasm.js"></script>
+                    </head>
+                    <body>
+                      <canvas id="nes-canvas"></canvas>
+                    </body>
+                    </html>
+                    """
+                default:
+                    return Response(status: .badRequest, body: .init(string: "Unsupported file type"))
+                }
+                
+                return Response(
+                    status: .ok,
+                    headers: ["Content-Type": "text/html"],
+                    body: .init(string: htmlContent)
+                )
             }
             
             DispatchQueue.global(qos: .userInitiated).async {
@@ -185,10 +279,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         app?.shutdown()
         currentServerState = .notRunning
         logger.info("Server stopped")
-    }
-    
-    func applicationWillTerminate(_ application: UIApplication) {
-        stopServer()
     }
 }
 

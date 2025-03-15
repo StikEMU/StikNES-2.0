@@ -134,6 +134,7 @@ After you import and launch your first game, please open the menu, navigate to L
                 isPresented: $showFileImporter,
                 allowedContentTypes: [
                     .init(filenameExtension: "nes")!,
+                    .init(filenameExtension: "swf")!,
                     .init(filenameExtension: "zip")!
                 ],
                 allowsMultipleSelection: false
@@ -238,28 +239,29 @@ After you import and launch your first game, please open the menu, navigate to L
             defer { selectedFile.stopAccessingSecurityScopedResource() }
             
             let fileManager = FileManager.default
-            if selectedFile.pathExtension.lowercased() == "zip" {
+            let lowercasedExtension = selectedFile.pathExtension.lowercased()
+            if lowercasedExtension == "zip" {
                 let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
                 let unzipDirectory = tempDirectory.appendingPathComponent(UUID().uuidString)
                 try fileManager.createDirectory(at: unzipDirectory, withIntermediateDirectories: true)
                 
                 try fileManager.unzipItem(at: selectedFile, to: unzipDirectory)
                 
-                let nesFiles = try fileManager.contentsOfDirectory(at: unzipDirectory, includingPropertiesForKeys: nil)
-                    .filter { $0.pathExtension.lowercased() == "nes" }
+                let gameFiles = try fileManager.contentsOfDirectory(at: unzipDirectory, includingPropertiesForKeys: nil)
+                    .filter { ["nes", "swf"].contains($0.pathExtension.lowercased()) }
                 
-                for nesFile in nesFiles {
-                    try importNESFile(nesFile)
+                for gameFile in gameFiles {
+                    try importGameFile(gameFile)
                 }
-            } else if selectedFile.pathExtension.lowercased() == "nes" {
-                try importNESFile(selectedFile)
+            } else if lowercasedExtension == "nes" || lowercasedExtension == "swf" {
+                try importGameFile(selectedFile)
             }
         } catch {
             print("Failed to import file: \(error)")
         }
     }
     
-    private func importNESFile(_ fileURL: URL) throws {
+    private func importGameFile(_ fileURL: URL) throws {
         let fileManager = FileManager.default
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
         let emulatorPath = tempDirectory.appendingPathComponent("Emulator")
