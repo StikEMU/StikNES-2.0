@@ -26,6 +26,14 @@ struct Game: Identifiable, Hashable, Codable {
     }
 }
 
+// Define sort options.
+enum SortOrder: String, CaseIterable, Identifiable {
+    case nameAscending = "Name Ascending"
+    case nameDescending = "Name Descending"
+    
+    var id: String { self.rawValue }
+}
+
 struct ContentView: View {
     @State private var importedGames: [Game] = []
     @State private var showFileImporter = false
@@ -34,7 +42,8 @@ struct ContentView: View {
     @State private var gamePendingImage: Game?
     @State private var searchText = ""
     @State private var showSkinManager = false
-    @State private var showHelpSection = false
+    // New sort state property.
+    @State private var sortOrder: SortOrder = .nameAscending
 
     private let columns = [
         GridItem(.adaptive(minimum: 160), spacing: 16)
@@ -43,9 +52,30 @@ struct ContentView: View {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }()
     
-    var filteredGames: [Game] {
-        importedGames.filter { game in
+    // Computed property that filters and sorts games.
+    var sortedGames: [Game] {
+        let games = importedGames.filter { game in
             searchText.isEmpty || game.name.localizedCaseInsensitiveContains(searchText)
+        }
+        switch sortOrder {
+        case .nameAscending:
+            return games.sorted { $0.name.lowercased() < $1.name.lowercased() }
+        case .nameDescending:
+            return games.sorted { $0.name.lowercased() > $1.name.lowercased() }
+        }
+    }
+    
+    // Group games by console type using the sorted list.
+    var groupedGames: [String: [Game]] {
+        Dictionary(grouping: sortedGames) { game in
+            let lowercasedName = game.name.lowercased()
+            if lowercasedName.hasSuffix(".nes") {
+                return "NES"
+            } else if lowercasedName.hasSuffix(".swf") {
+                return "Flash"
+            } else {
+                return "Other"
+            }
         }
     }
     
@@ -87,35 +117,44 @@ After you import and launch your first game, please open the menu, navigate to L
                             .padding(.bottom, 8)
                     }
                 } else {
-                    VStack(spacing: 0) {
-                        ScrollView {
-                            LazyVGrid(columns: columns, spacing: 16) {
-                                ForEach(filteredGames) { game in
-                                    GameCardView(
-                                        game: game,
-                                        onLongPressSetPhoto: {
-                                            gamePendingImage = game
-                                            showImagePicker = true
-                                        },
-                                        onDelete: {
-                                            deleteGame(game)
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 16) {
+                            ForEach(groupedGames.keys.sorted(), id: \.self) { consoleType in
+                                // Section header for console type
+                                Text(consoleType)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 16)
+                                
+                                // Grid for games in each console type
+                                LazyVGrid(columns: columns, spacing: 16) {
+                                    ForEach(groupedGames[consoleType] ?? []) { game in
+                                        GameCardView(
+                                            game: game,
+                                            onLongPressSetPhoto: {
+                                                gamePendingImage = game
+                                                showImagePicker = true
+                                            },
+                                            onDelete: {
+                                                deleteGame(game)
+                                            }
+                                        )
+                                        .onTapGesture {
+                                            launchGame(game)
                                         }
-                                    )
-                                    .onTapGesture {
-                                        launchGame(game)
                                     }
                                 }
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.top, 16)
-                            Spacer()
+                            // Footer with app version
                             Text("StikEMU v\(appVersion)")
                                 .foregroundColor(.gray)
                                 .font(.caption)
                                 .padding(.bottom, 8)
+                                .padding(.top, 16)
                         }
-                        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
                     }
+                    .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
                 }
                 
                 if let selectedGame = selectedGame {
@@ -189,12 +228,16 @@ After you import and launch your first game, please open the menu, navigate to L
                         SkinManagerView()
                     }
                     
-                    Button(action: {
-                        if let url = URL(string: "https://stiknes.com") {
-                            UIApplication.shared.open(url)
+                    // Sort Menu replacing the previous Help button.
+                    Menu {
+                        Button("Name Ascending") {
+                            sortOrder = .nameAscending
                         }
-                    }) {
-                        Label("Help", systemImage: "questionmark.circle.fill")
+                        Button("Name Descending") {
+                            sortOrder = .nameDescending
+                        }
+                    } label: {
+                        Label("Sort", systemImage: "arrow.up.arrow.down")
                             .labelStyle(.iconOnly)
                             .font(.system(size: 24))
                             .foregroundColor(.blue)
