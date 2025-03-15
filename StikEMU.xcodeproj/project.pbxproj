@@ -29,18 +29,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		DCBB133D2D225B2400A1721A /* StikNES.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StikNES.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DCBB134D2D225B2600A1721A /* StikNESTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikNESTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DCBB13572D225B2600A1721A /* StikNESUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikNESUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCBB133D2D225B2400A1721A /* StikEMU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StikEMU.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCBB134D2D225B2600A1721A /* StikEMUTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikEMUTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCBB13572D225B2600A1721A /* StikEMUUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StikEMUUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikNES" target */ = {
+		DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikEMU" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = DCBB133C2D225B2400A1721A /* StikNES */;
+			target = DCBB133C2D225B2400A1721A /* StikEMU */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -53,7 +53,7 @@
 		DCBB133F2D225B2400A1721A /* StikNES */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikNES" target */,
+				DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikEMU" target */,
 			);
 			path = StikNES;
 			sourceTree = "<group>";
@@ -105,9 +105,9 @@
 		DCBB133E2D225B2400A1721A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				DCBB133D2D225B2400A1721A /* StikNES.app */,
-				DCBB134D2D225B2600A1721A /* StikNESTests.xctest */,
-				DCBB13572D225B2600A1721A /* StikNESUITests.xctest */,
+				DCBB133D2D225B2400A1721A /* StikEMU.app */,
+				DCBB134D2D225B2600A1721A /* StikEMUTests.xctest */,
+				DCBB13572D225B2600A1721A /* StikEMUUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,9 +115,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		DCBB133C2D225B2400A1721A /* StikNES */ = {
+		DCBB133C2D225B2400A1721A /* StikEMU */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = DCBB13612D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNES" */;
+			buildConfigurationList = DCBB13612D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikEMU" */;
 			buildPhases = (
 				DCBB13392D225B2400A1721A /* Sources */,
 				DCBB133A2D225B2400A1721A /* Frameworks */,
@@ -131,18 +131,18 @@
 				DC47DD0A2D3B289B008A9F93 /* StikNESTests */,
 				DCBB133F2D225B2400A1721A /* StikNES */,
 			);
-			name = StikNES;
+			name = StikEMU;
 			packageProductDependencies = (
 				DC2BF0C72D4EBE4A00296A55 /* Vapor */,
 				DC4E8DD42D66E25C009DF43A /* ZIPFoundation */,
 			);
 			productName = StikNES;
-			productReference = DCBB133D2D225B2400A1721A /* StikNES.app */;
+			productReference = DCBB133D2D225B2400A1721A /* StikEMU.app */;
 			productType = "com.apple.product-type.application";
 		};
-		DCBB134C2D225B2600A1721A /* StikNESTests */ = {
+		DCBB134C2D225B2600A1721A /* StikEMUTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = DCBB13642D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESTests" */;
+			buildConfigurationList = DCBB13642D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikEMUTests" */;
 			buildPhases = (
 				DCBB13492D225B2600A1721A /* Sources */,
 				DCBB134A2D225B2600A1721A /* Frameworks */,
@@ -153,16 +153,16 @@
 			dependencies = (
 				DCBB134F2D225B2600A1721A /* PBXTargetDependency */,
 			);
-			name = StikNESTests;
+			name = StikEMUTests;
 			packageProductDependencies = (
 			);
 			productName = StikNESTests;
-			productReference = DCBB134D2D225B2600A1721A /* StikNESTests.xctest */;
+			productReference = DCBB134D2D225B2600A1721A /* StikEMUTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		DCBB13562D225B2600A1721A /* StikNESUITests */ = {
+		DCBB13562D225B2600A1721A /* StikEMUUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = DCBB13672D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESUITests" */;
+			buildConfigurationList = DCBB13672D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikEMUUITests" */;
 			buildPhases = (
 				DCBB13532D225B2600A1721A /* Sources */,
 				DCBB13542D225B2600A1721A /* Frameworks */,
@@ -176,11 +176,11 @@
 			fileSystemSynchronizedGroups = (
 				DCBB135A2D225B2600A1721A /* StikNESUITests */,
 			);
-			name = StikNESUITests;
+			name = StikEMUUITests;
 			packageProductDependencies = (
 			);
 			productName = StikNESUITests;
-			productReference = DCBB13572D225B2600A1721A /* StikNESUITests.xctest */;
+			productReference = DCBB13572D225B2600A1721A /* StikEMUUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -206,7 +206,7 @@
 					};
 				};
 			};
-			buildConfigurationList = DCBB13382D225B2400A1721A /* Build configuration list for PBXProject "StikNES" */;
+			buildConfigurationList = DCBB13382D225B2400A1721A /* Build configuration list for PBXProject "StikEMU" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -224,9 +224,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				DCBB133C2D225B2400A1721A /* StikNES */,
-				DCBB134C2D225B2600A1721A /* StikNESTests */,
-				DCBB13562D225B2600A1721A /* StikNESUITests */,
+				DCBB133C2D225B2400A1721A /* StikEMU */,
+				DCBB134C2D225B2600A1721A /* StikEMUTests */,
+				DCBB13562D225B2600A1721A /* StikEMUUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -282,12 +282,12 @@
 /* Begin PBXTargetDependency section */
 		DCBB134F2D225B2600A1721A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = DCBB133C2D225B2400A1721A /* StikNES */;
+			target = DCBB133C2D225B2400A1721A /* StikEMU */;
 			targetProxy = DCBB134E2D225B2600A1721A /* PBXContainerItemProxy */;
 		};
 		DCBB13592D225B2600A1721A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = DCBB133C2D225B2400A1721A /* StikNES */;
+			target = DCBB133C2D225B2400A1721A /* StikEMU */;
 			targetProxy = DCBB13582D225B2600A1721A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -503,7 +503,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StikNES.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StikNES";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StikEMU.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StikEMU";
 			};
 			name = Debug;
 		};
@@ -522,7 +522,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StikNES.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StikNES";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StikEMU.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StikEMU";
 			};
 			name = Release;
 		};
@@ -563,7 +563,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		DCBB13382D225B2400A1721A /* Build configuration list for PBXProject "StikNES" */ = {
+		DCBB13382D225B2400A1721A /* Build configuration list for PBXProject "StikEMU" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DCBB135F2D225B2600A1721A /* Debug */,
@@ -572,7 +572,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DCBB13612D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNES" */ = {
+		DCBB13612D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikEMU" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DCBB13622D225B2600A1721A /* Debug */,
@@ -581,7 +581,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DCBB13642D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESTests" */ = {
+		DCBB13642D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikEMUTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DCBB13652D225B2600A1721A /* Debug */,
@@ -590,7 +590,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DCBB13672D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikNESUITests" */ = {
+		DCBB13672D225B2600A1721A /* Build configuration list for PBXNativeTarget "StikEMUUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DCBB13682D225B2600A1721A /* Debug */,

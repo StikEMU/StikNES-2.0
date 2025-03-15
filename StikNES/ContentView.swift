@@ -15,7 +15,7 @@ struct Game: Identifiable, Hashable, Codable {
     var developer: String?
     var releaseYear: String?
     var description: String?
-
+    
     init(id: UUID = UUID(), name: String, imageData: Data? = nil, developer: String? = nil, releaseYear: String? = nil, description: String? = nil) {
         self.id = id
         self.name = name
@@ -48,7 +48,7 @@ struct ContentView: View {
             searchText.isEmpty || game.name.localizedCaseInsensitiveContains(searchText)
         }
     }
-
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -81,7 +81,7 @@ After you import and launch your first game, please open the menu, navigate to L
                                 .padding(.horizontal, 24)
                         }
                         Spacer()
-                        Text("StikNES v\(appVersion)")
+                        Text("StikEMU v\(appVersion)")
                             .foregroundColor(.gray)
                             .font(.caption)
                             .padding(.bottom, 8)
@@ -109,7 +109,7 @@ After you import and launch your first game, please open the menu, navigate to L
                             .padding(.horizontal, 16)
                             .padding(.top, 16)
                             Spacer()
-                            Text("StikNES v\(appVersion)")
+                            Text("StikEMU v\(appVersion)")
                                 .foregroundColor(.gray)
                                 .font(.caption)
                                 .padding(.bottom, 8)
@@ -120,7 +120,7 @@ After you import and launch your first game, please open the menu, navigate to L
                 
                 if let selectedGame = selectedGame {
                     NavigationLink(
-                        destination: EmulatorView(game: selectedGame.name)
+                        destination: GameDescriptionView(game: selectedGame, updateGame: updateGame)
                             .navigationBarTitleDisplayMode(.inline),
                         tag: selectedGame,
                         selection: $selectedGame
@@ -142,7 +142,7 @@ After you import and launch your first game, please open the menu, navigate to L
                 handleFileImport(result: result)
             }
             .onAppear(perform: loadImportedGames)
-            .navigationTitle("StikNES")
+            .navigationTitle("StikEMU")
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarLeading) {
                     Button(action: {
@@ -228,6 +228,13 @@ After you import and launch your first game, please open the menu, navigate to L
     
     private func launchGame(_ game: Game) {
         selectedGame = game
+    }
+    
+    private func updateGame(_ updatedGame: Game) {
+        if let index = importedGames.firstIndex(where: { $0.id == updatedGame.id }) {
+            importedGames[index] = updatedGame
+            saveImportedGames()
+        }
     }
     
     private func handleFileImport(result: Result<[URL], Error>) {
@@ -355,6 +362,164 @@ struct GameCardView: View {
             } label: {
                 Label("Delete Game", systemImage: "trash")
             }
+        }
+    }
+}
+
+struct GameDescriptionView: View {
+    let game: Game
+    let updateGame: (Game) -> Void
+    @State private var showEditor = false
+    
+    var consoleType: String {
+        let lowercasedName = game.name.lowercased()
+        if lowercasedName.hasSuffix(".nes") {
+            return "NES"
+        } else if lowercasedName.hasSuffix(".swf") {
+            return "Flash"
+        }
+        return "Unknown Console"
+    }
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if let imageData = game.imageData, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .cornerRadius(12)
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 200)
+                        Image(systemName: "gamecontroller")
+                            .font(.system(size: 60))
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                Text((game.name as NSString).deletingPathExtension)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                
+                HStack {
+                    Text("Console: ")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    Text(consoleType)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+                
+                if let developer = game.developer, !developer.isEmpty {
+                    HStack {
+                        Text("Developer: ")
+                            .foregroundColor(.gray)
+                        Text(developer)
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                if let releaseYear = game.releaseYear, !releaseYear.isEmpty {
+                    HStack {
+                        Text("Release Year: ")
+                            .foregroundColor(.gray)
+                        Text(releaseYear)
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                if let description = game.description, !description.isEmpty {
+                    Text(description)
+                        .foregroundColor(.white)
+                        .padding(.top, 8)
+                }
+                
+                NavigationLink(destination: EmulatorView(game: game.name)) {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Play")
+                            .fontWeight(.semibold)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    .padding(.vertical)
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+        .background(Color.black.edgesIgnoringSafeArea(.all))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    showEditor = true
+                }) {
+                    Image(systemName: "pencil")
+                }
+            }
+        }
+        .sheet(isPresented: $showEditor) {
+            GameInfoEditorView(game: game) { updatedGame in
+                updateGame(updatedGame)
+            }
+        }
+    }
+}
+
+struct GameInfoEditorView: View {
+    @Environment(\.presentationMode) var presentationMode
+    var game: Game
+    var onSave: (Game) -> Void
+    
+    @State private var developer: String = ""
+    @State private var releaseYear: String = ""
+    @State private var descriptionText: String = ""
+    
+    init(game: Game, onSave: @escaping (Game) -> Void) {
+        self.game = game
+        self.onSave = onSave
+        _developer = State(initialValue: game.developer ?? "")
+        _releaseYear = State(initialValue: game.releaseYear ?? "")
+        _descriptionText = State(initialValue: game.description ?? "")
+    }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Developer")) {
+                    TextField("Developer", text: $developer)
+                }
+                Section(header: Text("Release Year")) {
+                    TextField("Release Year", text: $releaseYear)
+                }
+                Section(header: Text("Description")) {
+                    TextEditor(text: $descriptionText)
+                        .frame(height: 150)
+                }
+            }
+            .navigationBarTitle("Edit Info", displayMode: .inline)
+            .navigationBarItems(
+                leading: Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                },
+                trailing: Button("Save") {
+                    var updatedGame = game
+                    updatedGame.developer = developer
+                    updatedGame.releaseYear = releaseYear
+                    updatedGame.description = descriptionText
+                    onSave(updatedGame)
+                    presentationMode.wrappedValue.dismiss()
+                }
+            )
         }
     }
 }
