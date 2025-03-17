@@ -1,87 +1,78 @@
-name: Build IPA
+name: Build Unsigned IPA
 
 on:
   push:
-    branches: [ "iOS" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "iOS" ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build IPA for StikNES
-    runs-on: macos-15  # Ensures the latest macOS version
-
+    name: Build IPA
+    runs-on: macos-13
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set Xcode 16
-        run: |
-          # Find the correct Xcode 16 version dynamically
-          XCODE_PATH=$(ls -d /Applications/Xcode_16* 2>/dev/null | head -n 1)
-          if [ -z "$XCODE_PATH" ]; then
-            echo "❌ Xcode 16 not found! Listing available versions:"
-            ls -l /Applications | grep Xcode
-            exit 1
-          fi
-          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-          echo "✅ Using Xcode at: $XCODE_PATH"
-          xcodebuild -version
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.2'
 
       - name: Install xcpretty
         run: gem install xcpretty
 
-      - name: Build IPA
-        env:
-          SCHEME: "StikNES"
+      - name: Build Archive
         run: |
-          echo "🚀 Building scheme: $SCHEME"
-
-          # Create build directory
-          mkdir -p build
-
-          # Clean and archive the project with reduced logging
           xcodebuild clean archive \
-            -scheme "$SCHEME" \
+            -scheme "StikNES" \
             -configuration Release \
-            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
+            -archivePath "build/StikNES.xcarchive" \
             -sdk iphoneos \
-            -allowProvisioningUpdates \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO | xcpretty
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO | xcpretty
 
-          # Export IPA from archive
+      - name: Create Export Options
+        run: |
+          cat > exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>ad-hoc</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>signingCertificate</key>
+              <string></string>
+              <key>teamID</key>
+              <string></string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        run: |
           xcodebuild -exportArchive \
-            -archivePath "$PWD/build/${SCHEME}.xcarchive" \
-            -exportOptionsPlist <(echo '{ "method": "ad-hoc", "signingStyle": "manual", "signingCertificate": "", "teamID": "" }') \
-            -exportPath "$PWD/build" | xcpretty
-
-          # Ensure the IPA exists before proceeding
-          if [ ! -f "build/${SCHEME}.ipa" ]; then
-            echo "❌ Error: IPA file not found!"
-            exit 1
-          fi
-          echo "✅ IPA successfully created: build/${SCHEME}.ipa"
+            -archivePath "build/StikNES.xcarchive" \
+            -exportPath "build" \
+            -exportOptionsPlist exportOptions.plist
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: StikNES.ipa
-          path: build/StikNES.ipa
-          retention-days: 90
+          name: StikNES-unsigned
+          path: build/*.ipa
+          retention-days: 30
 
-      - name: Compress and Upload Logs (if failed)
-        if: failure()
-        run: |
-          echo "⚠️ Build failed! Compressing logs for debugging..."
-          tar -czf build-logs.tar.gz ~/Library/Logs/DiagnosticReports
-        continue-on-error: true
-
-      - name: Upload Logs
+      - name: Upload Build Logs on Failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: build-logs
-          path: build-logs.tar.gz
+          path: ~/Library/Logs/DiagnosticReports
           retention-days: 7
