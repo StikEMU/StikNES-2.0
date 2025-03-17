@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Unsigned IPA
+    name: Build IPA
     runs-on: macos-14
 
     steps:
@@ -26,29 +26,47 @@ jobs:
           sed -i '' 's/objectVersion = 77/objectVersion = 56/' StikEMU.xcodeproj/project.pbxproj
           sed -i '' 's/preferredProjectObjectVersion = 77/preferredProjectObjectVersion = 56/' StikEMU.xcodeproj/project.pbxproj
 
-      - name: Build
+      - name: Create ExportOptions.plist
         run: |
-          xcodebuild clean build \
+          cat <<EOF > ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>development</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>compileBitcode</key>
+              <false/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Archive Build
+        run: |
+          xcodebuild clean archive \
             -project StikEMU.xcodeproj \
             -scheme "StikEMU" \
             -configuration Release \
-            -sdk iphoneos \
-            -derivedDataPath build \
+            -archivePath build/StikEMU.xcarchive \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             IPHONEOS_DEPLOYMENT_TARGET=17.0
 
-      - name: Create IPA
+      - name: Export IPA
         run: |
-          mkdir -p Payload
-          cp -r build/Build/Products/Release-iphoneos/StikEMU.app Payload/
-          zip -r StikEMU.ipa Payload
-          rm -rf Payload
+          xcodebuild -exportArchive \
+            -archivePath build/StikEMU.xcarchive \
+            -exportPath build \
+            -exportOptionsPlist ExportOptions.plist
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: StikEMU.ipa
-          path: StikEMU.ipa
+          path: build/StikEMU.ipa
           retention-days: 90
