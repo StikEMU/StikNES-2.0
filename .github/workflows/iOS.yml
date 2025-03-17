@@ -19,11 +19,15 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '15.2'
+          xcode-version: 'latest'
+
+      - name: Fix Project Format
+        run: |
+          sed -i '' 's/objectVersion = 77/objectVersion = 56/' StikEMU.xcodeproj/project.pbxproj
+          sed -i '' 's/preferredProjectObjectVersion = 77/preferredProjectObjectVersion = 56/' StikEMU.xcodeproj/project.pbxproj
 
       - name: Build
         run: |
-          # Build for generic iOS device
           xcodebuild clean build \
             -project StikEMU.xcodeproj \
             -scheme "StikEMU" \
@@ -33,9 +37,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            PRODUCT_BUNDLE_IDENTIFIER="com.ieatbroccoli.neosign" \
-            DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
+            IPHONEOS_DEPLOYMENT_TARGET=17.0
 
       - name: Create IPA
         run: |
