@@ -24,28 +24,31 @@ jobs:
       - name: Build for iOS
         run: |
           xcodebuild clean build \
-            -workspace StikNES.xcworkspace \
-            -scheme "StikNES" \
+            -project StikEMU.xcodeproj \
+            -scheme "StikEMU" \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            ENABLE_BITCODE=NO
+            ENABLE_BITCODE=NO \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            PRODUCT_BUNDLE_IDENTIFIER="com.stik.StikEMU"
 
       - name: Create IPA
         run: |
           cd build/Build/Products/Release-iphoneos
           mkdir Payload
-          cp -r StikNES.app Payload
-          zip -r StikNES.ipa Payload
+          cp -r StikEMU.app Payload
+          zip -r StikEMU.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: StikNES-unsigned
-          path: build/Build/Products/Release-iphoneos/StikNES.ipa
+          name: StikEMU-unsigned
+          path: build/Build/Products/Release-iphoneos/StikEMU.ipa
           retention-days: 30
 
       - name: Upload Build Logs on Failure
