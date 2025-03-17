@@ -31,24 +31,20 @@ jobs:
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            ENABLE_BITCODE=NO \
-            DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            PRODUCT_BUNDLE_IDENTIFIER="com.stik.StikEMU"
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Create IPA
         run: |
-          cd build/Build/Products/Release-iphoneos
-          mkdir Payload
-          cp -r StikEMU.app Payload
+          mkdir -p Payload
+          cp -r build/Build/Products/Release-iphoneos/StikEMU.app Payload/
           zip -r StikEMU.ipa Payload
+          rm -rf Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: StikEMU-unsigned
-          path: build/Build/Products/Release-iphoneos/StikEMU.ipa
+          path: StikEMU.ipa
           retention-days: 30
 
       - name: Upload Build Logs on Failure
