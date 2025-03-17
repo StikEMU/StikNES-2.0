@@ -21,53 +21,29 @@ jobs:
         with:
           xcode-version: '15.2'
 
-      - name: Create Build Directory
-        run: mkdir -p build
-
-      - name: Build Archive
+      - name: Build for iOS
         run: |
-          xcodebuild clean archive \
+          xcodebuild -project StikEMU.xcodeproj \
             -scheme "StikEMU" \
             -configuration Release \
-            -archivePath "build/StikEMU.xcarchive" \
             -sdk iphoneos \
+            -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            ONLY_ACTIVE_ARCH=NO
+            CODE_SIGNING_ALLOWED=NO
 
-      - name: Create Export Options
+      - name: Create IPA
         run: |
-          cat > exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>development</string>
-              <key>compileBitcode</key>
-              <false/>
-              <key>signingStyle</key>
-              <string>automatic</string>
-              <key>stripSwiftSymbols</key>
-              <true/>
-          </dict>
-          </plist>
-          EOF
-
-      - name: Export IPA
-        run: |
-          xcodebuild -exportArchive \
-            -archivePath "build/StikEMU.xcarchive" \
-            -exportPath "build/output" \
-            -exportOptionsPlist exportOptions.plist \
-            -allowProvisioningUpdates
+          cd build/Build/Products/Release-iphoneos
+          mkdir Payload
+          cp -r *.app Payload
+          zip -r StikEMU.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: StikEMU-unsigned
-          path: build/output/*.ipa
+          path: build/Build/Products/Release-iphoneos/StikEMU.ipa
           retention-days: 30
 
       - name: Upload Build Logs on Failure
