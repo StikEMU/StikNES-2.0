@@ -1,4 +1,4 @@
-name: Build IPA
+name: Build Unsigned IPA
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build IPA
+    name: Build Unsigned IPA
     runs-on: macos-14
 
     steps:
@@ -26,26 +26,7 @@ jobs:
           sed -i '' 's/objectVersion = 77/objectVersion = 56/' StikEMU.xcodeproj/project.pbxproj
           sed -i '' 's/preferredProjectObjectVersion = 77/preferredProjectObjectVersion = 56/' StikEMU.xcodeproj/project.pbxproj
 
-      - name: Create ExportOptions.plist
-        run: |
-          cat <<EOF > ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>development</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>stripSwiftSymbols</key>
-              <true/>
-              <key>compileBitcode</key>
-              <false/>
-          </dict>
-          </plist>
-          EOF
-
-      - name: Archive Build
+      - name: Archive Build (Unsigned)
         run: |
           xcodebuild clean archive \
             -project StikEMU.xcodeproj \
@@ -57,16 +38,30 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             IPHONEOS_DEPLOYMENT_TARGET=17.0
 
-      - name: Export IPA
+      - name: Create IPA from Archive
         run: |
-          xcodebuild -exportArchive \
-            -archivePath build/StikEMU.xcarchive \
-            -exportPath build \
-            -exportOptionsPlist ExportOptions.plist
+          # Copy the .app from the archive
+          cp -R build/StikEMU.xcarchive/Products/Applications/StikEMU.app .
+
+          # Optionally strip debug symbols from the executable (adjust path if needed)
+          strip -S -x StikEMU.app/StikEMU || true
+
+          # Optionally remove unwanted simulator slices (example shown for x86_64)
+          APP_PATH="StikEMU.app"
+          if [ -f "$APP_PATH/StikEMU" ]; then
+            lipo "$APP_PATH/StikEMU" -info
+            lipo -remove x86_64 "$APP_PATH/StikEMU" -o "$APP_PATH/StikEMU" || true
+          fi
+
+          # Package the app into an IPA
+          mkdir -p Payload
+          cp -R StikEMU.app Payload/
+          zip -r StikEMU.ipa Payload
+          rm -rf Payload StikEMU.app
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: StikEMU.ipa
-          path: build/StikEMU.ipa
+          path: StikEMU.ipa
           retention-days: 90
