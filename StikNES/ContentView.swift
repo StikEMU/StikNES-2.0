@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ZIPFoundation
+import Combine
 
 struct Game: Identifiable, Hashable, Codable {
     let id: UUID
@@ -35,6 +36,9 @@ enum SortOrder: String, CaseIterable, Identifiable {
 }
 
 struct ContentView: View {
+    @AppStorage("username") private var username = "User"
+    @AppStorage("customBackgroundColor") private var customBackgroundColorHex: String = Color.primaryBackground.toHex() ?? "#000000"
+    @State private var selectedBackgroundColor: Color = Color(hex: UserDefaults.standard.string(forKey: "customBackgroundColor") ?? "#008080") ?? Color.primaryBackground
     @State private var importedGames: [Game] = []
     @State private var showFileImporter = false
     @State private var selectedGame: Game?
@@ -42,7 +46,7 @@ struct ContentView: View {
     @State private var gamePendingImage: Game?
     @State private var searchText = ""
     @State private var showSkinManager = false
-    // New sort state property.
+    @State private var showSettings = true
     @State private var sortOrder: SortOrder = .nameAscending
 
     private let columns = [
@@ -51,7 +55,8 @@ struct ContentView: View {
     private let appVersion: String = {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }()
-    
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
     // Computed property that filters and sorts games.
     var sortedGames: [Game] {
         let games = importedGames.filter { game in
@@ -82,8 +87,9 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
-                
+                selectedBackgroundColor
+                    .ignoresSafeArea()
+
                 if importedGames.isEmpty {
                     VStack(spacing: 16) {
                         Image(systemName: "gamecontroller")
@@ -181,78 +187,84 @@ After you import and launch your first game, please open the menu, navigate to L
                 handleFileImport(result: result)
             }
             .onAppear(perform: loadImportedGames)
-            .navigationTitle("StikEMU")
+            .navigationTitle("Hello, \(username)!")
             .toolbar {
-                ToolbarItemGroup(placement: .navigationBarLeading) {
-                    Button(action: {
-                        if let url = URL(string: "https://discord.gg/a6qxs97Gun") {
-                            UIApplication.shared.open(url)
-                        }
-                    }) {
-                        Label("Discord", systemImage: "ellipsis.message.fill")
-                            .labelStyle(.iconOnly)
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                    }
-                    Button(action: {
-                        if let url = URL(string: "https://github.com/StikEMU/StikNES-2.0") {
-                            UIApplication.shared.open(url)
-                        }
-                    }) {
-                        Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
-                            .labelStyle(.iconOnly)
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                    }
-                    Button(action: {
-                        if let url = URL(string: "https://stiknes.com") {
-                            UIApplication.shared.open(url)
-                        }
-                    }) {
-                        Label("Privacy Policy", systemImage: "lock.doc")
-                            .labelStyle(.iconOnly)
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                    }
-                }
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showSkinManager = true
-                    }) {
-                        Label("Skin Manager", systemImage: "paintbrush.fill")
-                            .labelStyle(.iconOnly)
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                    }
-                    .sheet(isPresented: $showSkinManager) {
-                        SkinManagerView()
-                    }
-                    
-                    // Sort Menu replacing the previous Help button.
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Button("Name Ascending") {
-                            sortOrder = .nameAscending
+                        // Discord Button
+                        Button {
+                            if let url = URL(string: "https://discord.gg/a6qxs97Gun") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            Label("Discord", systemImage: "ellipsis.message.fill")
                         }
-                        Button("Name Descending") {
-                            sortOrder = .nameDescending
+                        
+                        // Source Code Button
+                        Button {
+                            if let url = URL(string: "https://github.com/StikEMU/StikNES-2.0") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
+                        }
+                        
+                        // Privacy Policy Button
+                        Button {
+                            if let url = URL(string: "https://stiknes.com") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            Label("Privacy Policy", systemImage: "lock.doc")
+                        }
+                        
+                        // Skin Manager Button
+                        Button {
+                            showSkinManager = true
+                        } label: {
+                            Label("Skin Manager", systemImage: "paintbrush.fill")
+                        }
+                        
+                        Button {
+                            showSettings  = true
+                        } label: {
+                            Label("App Settings", systemImage: "gearshape.fill")
+                        }
+                        
+                        // Sort Menu
+                        Menu {
+                            Button("Name Ascending") {
+                                sortOrder = .nameAscending
+                            }
+                            Button("Name Descending") {
+                                sortOrder = .nameDescending
+                            }
+                        } label: {
+                            Label("Sort", systemImage: "arrow.up.arrow.down")
+                        }
+                        
+                        // Import Game Button
+                        Button {
+                            showFileImporter = true
+                        } label: {
+                            Label("Import Game", systemImage: "plus.circle.fill")
                         }
                     } label: {
-                        Label("Sort", systemImage: "arrow.up.arrow.down")
-                            .labelStyle(.iconOnly)
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                    }
-                    
-                    Button(action: {
-                        showFileImporter = true
-                    }) {
-                        Label("Import Game", systemImage: "plus.circle.fill")
-                            .labelStyle(.iconOnly)
+                        Label("Menu", systemImage: "ellipsis.circle")
                             .font(.system(size: 24))
                             .foregroundColor(.blue)
                     }
                 }
             }
+            .sheet(isPresented: $showSkinManager) {
+                SkinManagerView()
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+            }
+        }
+        .onReceive(timer) { _ in
+            refreshBackground()
         }
         .preferredColorScheme(.dark)
         .navigationViewStyle(StackNavigationViewStyle())
@@ -267,6 +279,10 @@ After you import and launch your first game, please open the menu, navigate to L
                 }
             }
         }
+    }
+    
+    private func refreshBackground() {
+        selectedBackgroundColor = Color(hex: customBackgroundColorHex) ?? Color.primaryBackground
     }
     
     private func launchGame(_ game: Game) {

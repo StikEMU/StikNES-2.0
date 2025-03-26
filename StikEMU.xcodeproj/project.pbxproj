@@ -38,11 +38,22 @@
 		DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikEMU" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Color.swift,
 				Info.plist,
 			);
 			target = DCBB133C2D225B2400A1721A /* StikEMU */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		DC9E5C722D938C160065C68C /* Exceptions for "StikNES" folder in "Copy Bundle Resources" phase from "StikEMU" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = DCBB133B2D225B2400A1721A /* Resources */;
+			membershipExceptions = (
+				Color.swift,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DC47DD0A2D3B289B008A9F93 /* StikNESTests */ = {
@@ -54,6 +65,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				DC47DD082D3B2858008A9F93 /* Exceptions for "StikNES" folder in "StikEMU" target */,
+				DC9E5C722D938C160065C68C /* Exceptions for "StikNES" folder in "Copy Bundle Resources" phase from "StikEMU" target */,
 			);
 			path = StikNES;
 			sourceTree = "<group>";
