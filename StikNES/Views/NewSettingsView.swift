@@ -139,7 +139,7 @@ struct SettingsView: View {
                     
                     Button(action: {
                         // Open the source code repository URL
-                        if let url = URL(string: "https://github.com/orgs/StikTools/repositories") {
+                        if let url = URL(string: "https://github.com/StikEMU/StikNES-2.0") {
                             UIApplication.shared.open(url)
                         }
                     }) {
