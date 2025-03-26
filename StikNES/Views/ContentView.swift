@@ -46,7 +46,7 @@ struct ContentView: View {
     @State private var gamePendingImage: Game?
     @State private var searchText = ""
     @State private var showSkinManager = false
-    @State private var showSettings = true
+    @State private var showSettings = false
     @State private var sortOrder: SortOrder = .nameAscending
 
     private let columns = [

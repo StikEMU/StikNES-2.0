@@ -52,17 +52,17 @@ struct SettingsView: View {
                         .listRowBackground(Color.cardBackground)
                         .foregroundColor(.primaryText)
                     
-                  //  Button(action: {
-                  //      showIconPopover.toggle()
-                 //   }) {
-                   //     HStack {
-                  //          Text("App Icon")
-                  //              .foregroundColor(.primaryText)
-                  //          Spacer()
-                  //          Text(selectedAppIcon == "AppIcon" ? "Default" : selectedAppIcon)
-                  //              .foregroundColor(.primaryText)
-                   //     }
-               //     }
+                    Button(action: {
+                        showIconPopover.toggle()
+                    }) {
+                        HStack {
+                            Text("App Icon")
+                                .foregroundColor(.primaryText)
+                            Spacer()
+                            Text(selectedAppIcon == "AppIcon" ? "Default" : selectedAppIcon)
+                                .foregroundColor(.primaryText)
+                        }
+                    }
                     .popover(isPresented: $showIconPopover) {
                         VStack(spacing: 15) {
                             Text("Select App Icon")
@@ -75,12 +75,8 @@ struct SettingsView: View {
                                 .padding(.horizontal)
 
                             iconButton("Default", icon: "AppIcon")
-                            iconButton("Yellow", icon: "YellowIcon")
+                            iconButton("Peach", icon: "PeachIcon")
                             iconButton("Green", icon: "GreenIcon")
-                            iconButton("Blue", icon: "BlueIcon")
-                            iconButton("Teal", icon: "TealIcon")
-                            iconButton("Black", icon: "BlackIcon")
-                            iconButton("White", icon: "WhiteIcon")
 
                             Spacer()
 
